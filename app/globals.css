@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'ms_sans_serif';
+  src: url('/fonts/ms_sans_serif.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'ms_sans_serif';
+  src: url('/fonts/ms_sans_serif_bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+
+:root {
+  --background: #53bba5;
+}
+
+* {
+  font-family: 'ms_sans_serif' !important;
+}
+
+body {
+  background: var(--background);
+}
+
+/* Tailwindのフォントクラスを上書き */
+.font-sans,
+.font-serif,
+.font-mono,
+[class*="font-"] {
+  font-family: 'ms_sans_serif' !important;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px) translateX(0px);
+  }
+  25% {
+    transform: translateY(-10px) translateX(5px);
+  }
+  50% {
+    transform: translateY(0px) translateX(-5px);
+  }
+  75% {
+    transform: translateY(10px) translateX(5px);
+  }
+  100% {
+    transform: translateY(0px) translateX(0px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
