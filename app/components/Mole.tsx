@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 
 interface MoleProps {
   isVisible: boolean;
+  onWhack?: () => void;
 }
 
-export default function Mole({ isVisible }: MoleProps) {
+export default function Mole({ isVisible, onWhack }: MoleProps) {
   const [show, setShow] = useState(isVisible);
   const [animate, setAnimate] = useState(false);
 
@@ -21,6 +22,12 @@ export default function Mole({ isVisible }: MoleProps) {
     }
   }, [isVisible, show]);
 
+  const handleClick = () => {
+    if (onWhack) {
+      onWhack();
+    }
+  };
+
   if (!show) {
     return null;
   }
@@ -30,6 +37,8 @@ export default function Mole({ isVisible }: MoleProps) {
       src="/images/bolmole.png"
       alt="mole"
       className={`mole ${animate ? 'enter' : 'exit'}`}
+      onClick={handleClick}
+      style={{ cursor: 'pointer' }}
     />
   );
 } 

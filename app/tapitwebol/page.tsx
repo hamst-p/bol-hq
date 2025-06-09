@@ -181,7 +181,10 @@ export default function TapItWeBolPage() {
                     onClick={() => isGameActive && hitMole(index)}
                     onTouchStart={() => isGameActive && hitMole(index)}
                   >
-                    <Mole isVisible={isGameActive && isMoleVisible} />
+                    <Mole 
+                      isVisible={isGameActive && isMoleVisible} 
+                      onWhack={() => isGameActive && hitMole(index)}
+                    />
                   </div>
                 ))}
               </div>
