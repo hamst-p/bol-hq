@@ -22,7 +22,7 @@ export default function Header() {
             onClick={() => setOpen(!open)}
             style={{ 
               fontWeight: 'bold',
-              padding: '2px 4px',
+              padding: '2px 12px',
               height: '40px',
               display: 'flex',
               alignItems: 'center'
@@ -33,7 +33,7 @@ export default function Header() {
               alt="Bolana logo"
               width={32}
               height={32}
-              style={{ marginRight: 4 }}
+              style={{ marginRight: 8 }}
             />
             Fuck It
           </Button>

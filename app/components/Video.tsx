@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Window, WindowHeader, WindowContent, Button } from 'react95';
-import { Mplayer12, Mplayer14, Mplayer11 } from '@react95/icons';
+import { Msvfw32943, Sndvol32303, Progman40, Progman41 } from '@react95/icons';
 
 interface VideoProps {
   width?: number;
@@ -119,13 +119,13 @@ const Video: React.FC<VideoProps> = ({
         />
         <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px' }}>
           <Button onClick={handlePrevious} disabled={currentVideoIndex === 0}>
-            <Mplayer11 variant="32x32_4" />
+            <Progman40 variant="32x32_4" />
           </Button>
           <Button onClick={handlePlayPause}>
-            {isPlaying ? <Mplayer14 variant="32x32_4" /> : <Mplayer12 variant="32x32_4" />}
+            {isPlaying ? <Msvfw32943 variant="32x32_4" /> : <Sndvol32303 variant="32x32_4" />}
           </Button>
           <Button onClick={handleNext} disabled={currentVideoIndex === videos.length - 1}>
-            <Mplayer11 variant="32x32_4" style={{ transform: 'scaleX(-1)' }} />
+            <Progman41 variant="32x32_4" />
           </Button>
         </div>
       </WindowContent>
