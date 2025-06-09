@@ -153,30 +153,11 @@ export default function TapItWeBolPage() {
       <MatrixBackground />
       <Header />
 
-      <main className="flex-1 flex flex-col items-center justify-center relative z-10 p-4 min-h-0">
-        <div className="w-full max-w-lg mx-auto flex flex-col h-full">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2 text-white text-center">TAP IT WE BOL</h1>
-          
-          <div className="game-stats mb-2">
-            <p>Score: {score}</p>
-            <p>Time remaining: {timeLeft.toFixed(2)} sec</p>
-          </div>
-
-          <div className="game-board mb-2">
-            {holes.map((isMoleVisible, index) => (
-              <div
-                key={index}
-                className="hole"
-                onClick={() => isGameActive && hitMole(index)}
-                onTouchStart={() => isGameActive && hitMole(index)}
-              >
-                <Mole isVisible={isGameActive && isMoleVisible} />
-              </div>
-            ))}
-          </div>
-
-          {!isGameActive && timeLeft === 13.01 && (
+      <main className="flex-1 flex flex-col items-center justify-center relative z-10 p-4 pt-16 min-h-0">
+        <div className="w-full max-w-lg mx-auto flex flex-col h-full justify-center">
+          {!isGameActive && timeLeft === 13.01 ? (
             <div className="text-center">
+              <h1 className="text-3xl md:text-4xl font-bold mb-8 text-white">TAP IT WE BOL</h1>
               <button
                 onClick={startGame}
                 className="game-button"
@@ -184,11 +165,31 @@ export default function TapItWeBolPage() {
                 Start Game
               </button>
             </div>
-          )}
+          ) : isGameActive ? (
+            <>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2 text-white text-center">TAP IT WE BOL</h1>
+              <div className="game-stats mb-2">
+                <p>Score: {score}</p>
+                <p>Time remaining: {timeLeft.toFixed(2)} sec</p>
+              </div>
 
-          {!isGameActive && timeLeft <= 0 && (
+              <div className="game-board mb-2">
+                {holes.map((isMoleVisible, index) => (
+                  <div
+                    key={index}
+                    className="hole"
+                    onClick={() => isGameActive && hitMole(index)}
+                    onTouchStart={() => isGameActive && hitMole(index)}
+                  >
+                    <Mole isVisible={isGameActive && isMoleVisible} />
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
             <div className="text-center">
-              <p className="text-white text-lg mb-2">Your score is {score}</p>
+              <h1 className="text-3xl md:text-4xl font-bold mb-8 text-white">TAP IT WE BOL</h1>
+              <p className="text-white text-lg mb-4">Your score is {score}</p>
               <button
                 onClick={resetGame}
                 className="game-button"
