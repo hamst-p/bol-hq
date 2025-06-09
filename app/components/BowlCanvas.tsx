@@ -12,7 +12,6 @@ export default function BowlCanvas() {
   useEffect(() => {
     if (!mountRef.current) return;
 
-    // シーン、カメラ、レンダラーの初期化
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
       75,
@@ -22,25 +21,22 @@ export default function BowlCanvas() {
     );
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
-      alpha: true // 背景を透明に設定
+      alpha: true
     });
-    renderer.setClearColor(0x000000, 0); // 背景色を透明に設定
+    renderer.setClearColor(0x000000, 0); 
     renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
     mountRef.current.appendChild(renderer.domElement);
 
-    // OrbitControlsの設定
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
 
-    // ライティングの設定
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(0, 0, 10);
     scene.add(directionalLight);
 
-    // 3Dモデルのロード
     const loader = new OBJLoader();
     loader.load(
       '/models/model.obj',
@@ -66,11 +62,9 @@ export default function BowlCanvas() {
       }
     );
 
-    // カメラの位置設定
     camera.position.set(300, 180, 200);
     camera.lookAt(0, 0, 0);
 
-    // アニメーションループ
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
@@ -78,7 +72,6 @@ export default function BowlCanvas() {
     };
     animate();
 
-    // リサイズハンドラ
     const handleResize = () => {
       if (!mountRef.current) return;
       const width = mountRef.current.clientWidth;
@@ -89,7 +82,6 @@ export default function BowlCanvas() {
     };
     window.addEventListener('resize', handleResize);
 
-    // クリーンアップ
     return () => {
       window.removeEventListener('resize', handleResize);
       mountRef.current?.removeChild(renderer.domElement);
