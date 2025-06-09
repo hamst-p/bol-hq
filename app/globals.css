@@ -59,3 +59,98 @@ body {
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
+
+/* Whack-a-Mole Game Styles */
+.game-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+  padding: 0.25rem;
+}
+
+.hole {
+  background: #2a2a2a;
+  border-radius: 50%;
+  aspect-ratio: 1;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  width: 100%;
+  min-height: 60px;
+  border: 2px solid #444;
+}
+
+/* Mole Animation */
+@keyframes moleRise {
+  0% {
+    transform: translate(-50%, 100%);
+  }
+  60% {
+    transform: translate(-50%, -10%);
+  }
+  80% {
+    transform: translate(-50%, 5%);
+  }
+  100% {
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes moleSink {
+  0% {
+    transform: translate(-50%, 0);
+  }
+  100% {
+    transform: translate(-50%, 100%);
+  }
+}
+
+.mole {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  width: 80%;
+  height: auto;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.mole.enter {
+  animation: moleRise 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+}
+
+.mole.exit {
+  animation: moleSink 0.3s cubic-bezier(0.47, 0, 0.75, 0.72) forwards;
+}
+
+/* Game Controls */
+.game-controls {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.game-button {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.game-button:hover {
+  background: #45a049;
+}
+
+.game-stats {
+  text-align: center;
+  font-size: 1.5rem;
+  margin: 1rem 0;
+  color: white;
+}
