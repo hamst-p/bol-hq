@@ -1,1 +1,1 @@
-self.__REACT_LOADABLE_MANIFEST="{}"
+self.__REACT_LOADABLE_MANIFEST="{\"app/components/BowlViewer.tsx -> ./BowlCanvas\":{\"id\":\"app/components/BowlViewer.tsx -> ./BowlCanvas\",\"files\":[\"static/chunks/_app-pages-browser_app_components_BowlCanvas_tsx.js\"]}}"

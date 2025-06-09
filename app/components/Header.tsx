@@ -51,8 +51,24 @@ export default function Header() {
                 <span role="img" aria-label="🏠" style={{ marginLeft: '8px' }}>
                   🏠
                 </span>
-                <Link href="https://bol-hq.vercel.app/" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
+                <Link href="/" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
                   Home
+                </Link>
+              </ListItem>
+              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
+                  💰
+                </span>
+                <Link href="/account" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
+                  Swap
+                </Link>
+              </ListItem>
+              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
+                  📈
+                </span>
+                <Link href="/account" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
+                  Chart
                 </Link>
               </ListItem>
               <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -72,7 +88,7 @@ export default function Header() {
                   Meme Bank
                 </Link>
               </ListItem>
-              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <ListItem disabled style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
                   👆
                 </span>
@@ -80,7 +96,7 @@ export default function Header() {
                   TAP IT WE BOL
                 </Link>
               </ListItem>
-              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <ListItem disabled style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
                   👽
                 </span>
@@ -92,7 +108,7 @@ export default function Header() {
                 <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
                   🍜
                 </span>
-                <Link href="/account" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
+                <Link href="/pages/3d" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
                   3D Bol Experiment
                 </Link>
               </ListItem>
