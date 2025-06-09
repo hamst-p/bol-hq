@@ -16,7 +16,7 @@ const ButtonGroup = () => {
         <Link href="https://memedepot.com/d/bol" target="_blank" rel="noopener noreferrer">
           <Button>Meme Bank</Button>
         </Link>
-        <Link href="https://google.com" target="_blank" rel="noopener noreferrer">
+        <Link href="/tapitwebol" target="_blank" rel="noopener noreferrer">
           <Button disabled title="Coming Soon🍜">TAP IT WE BOL</Button>
         </Link>
         <Link href="https://google.com" target="_blank" rel="noopener noreferrer">
