@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import Header from '../../components/Header';
-import Footer from '../../components/Footer';
-import BowlViewer from '../../components/BowlViewer';
-import MatrixBackground from '../../components/MatrixBackground';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import BowlViewer from '../components/BowlViewer';
+import MatrixBackground from '../components/MatrixBackground';
 
 export default function ThreeDPage() {
   return (

@@ -108,7 +108,7 @@ export default function Header() {
                 <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
                   🍜
                 </span>
-                <Link href="/pages/3d" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
+                <Link href="/3d" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
                   3D Bol Experiment
                 </Link>
               </ListItem>

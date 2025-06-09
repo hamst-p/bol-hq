@@ -22,7 +22,7 @@ const ButtonGroup = () => {
         <Link href="https://google.com" target="_blank" rel="noopener noreferrer">
           <Button disabled title="Coming Soon🍜">Bolana Maker</Button>
         </Link>
-        <Link href="/pages/3d">
+        <Link href="/3d">
           <Button>3D Bol Experiment</Button>
         </Link>
       </div>
