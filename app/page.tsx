@@ -25,7 +25,6 @@ export default function Home() {
         <ButtonGroup />
 
         <Video
-          src="/videos/bol_vid_01.mp4"
           width={480}
           height={270}
           title="BOLANA TV"
