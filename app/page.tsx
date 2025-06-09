@@ -9,10 +9,12 @@ import Footer from './components/Footer';
 import Video from './components/Video';
 import ButtonGroup from './components/ButtonGroup';
 import FloatingBowl from './components/FloatingBowl';
+import WaveBackground from './components/WaveBackground';
 
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
+      <WaveBackground />
       <Header />
 
       <main className="flex-1 flex flex-col items-center gap-8 p-8 sm:p-20">
