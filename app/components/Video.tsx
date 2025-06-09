@@ -36,12 +36,14 @@ const Video: React.FC<VideoProps> = ({
       <WindowHeader className="window-header">
         <span>{title}</span>
       </WindowHeader>
-      <WindowContent>
+      <WindowContent style={{ padding: 2 }}>
         <video
           src={src}
-          width={containerWidth - 10}
-          height={calculatedHeight - 10}
+          width={containerWidth}
+          height={calculatedHeight}
           controls
+          playsInline
+          webkit-playsinline="true"
           style={{ 
             display: 'block',
             maxWidth: '100%'
