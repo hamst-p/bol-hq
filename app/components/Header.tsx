@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Frame, Button, List, ListItem, Divider } from 'react95';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -15,11 +16,17 @@ export default function Header() {
       right: 0,
       zIndex: 1000
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 6px', minHeight: '44px' }}>
         <div style={{ position: 'relative', display: 'inline-block' }}>
           <Button
             onClick={() => setOpen(!open)}
-            style={{ fontWeight: 'bold' }}
+            style={{ 
+              fontWeight: 'bold',
+              padding: '2px 4px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center'
+            }}
           >
             <Image
               src="/images/bolana.png"
@@ -40,24 +47,63 @@ export default function Header() {
               }}
               onClick={() => setOpen(false)}
             >
-              <ListItem>
-                <span role="img" aria-label="👨‍💻">
-                  👨‍💻
+              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span role="img" aria-label="🏠" style={{ marginLeft: '8px' }}>
+                  🏠
                 </span>
-                Profile
+                <Link href="https://bol-hq.vercel.app/" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
+                  Home
+                </Link>
               </ListItem>
-              <ListItem>
-                <span role="img" aria-label="📁">
-                  📁
+              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
+                  🌏
                 </span>
-                My account
+                <Link href="/account" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
+                  Socials
+                </Link>
               </ListItem>
               <Divider />
-              <ListItem disabled>
-                <span role="img" aria-label="🔙">
+              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
+                  🎨
+                </span>
+                <Link href="/account" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
+                  Meme Bank
+                </Link>
+              </ListItem>
+              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
+                  👆
+                </span>
+                <Link href="/account" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
+                  TAP IT WE BOL
+                </Link>
+              </ListItem>
+              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
+                  👽
+                </span>
+                <Link href="/account" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
+                  Bolana Maker
+                </Link>
+              </ListItem>
+              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
+                  🍜
+                </span>
+                <Link href="/account" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
+                  3D Bol Experiment
+                </Link>
+              </ListItem>
+              <Divider />
+              <ListItem disabled style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span role="img" aria-label="🔙" style={{ marginLeft: '8px' }}>
                   🔙
                 </span>
-                Logout
+                <Link href="/logout" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
+                  Logout
+                </Link>
               </ListItem>
             </List>
           )}
@@ -66,7 +112,11 @@ export default function Header() {
         <Button
           style={{
             width: '150px',
-            padding: '4px',
+            padding: '2px 4px',
+            height: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
           }}
         >
           Connect Wallet
