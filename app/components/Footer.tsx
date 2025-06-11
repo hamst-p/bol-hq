@@ -7,7 +7,7 @@ export default function Footer() {
     <footer>
       <FooterMenu />
       <div className="text-[11px] text-gray-700 text-center py-2">
-        © 2025 Bolana All rights reserved
+        © Forever Bolana All rights reserved
       </div>
     </footer>
   );

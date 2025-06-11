@@ -19,8 +19,8 @@ const ButtonGroup = () => {
         <Link href="/tapitwebol" target="_blank" rel="noopener noreferrer">
           <Button>TAP IT WE BOL</Button>
         </Link>
-        <Link href="https://google.com" target="_blank" rel="noopener noreferrer">
-          <Button disabled title="Coming Soon🍜">Bolana Maker</Button>
+        <Link href="/bolanamaker">
+          <Button>Bolana Maker</Button>
         </Link>
         <Link href="/3d">
           <Button>3D Bol Experiment</Button>

@@ -27,7 +27,7 @@ export default function Home() {
         <Video
           width={480}
           height={270}
-          title="BOLANA TV"
+          title="BOLANA_TV.wav"
         />
       </main>
 

@@ -96,11 +96,11 @@ export default function Header() {
                   TAP IT WE BOL
                 </Link>
               </ListItem>
-              <ListItem disabled style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
                   👽
                 </span>
-                <Link href="/account" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
+                <Link href="/bolanamaker" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
                   Bolana Maker
                 </Link>
               </ListItem>

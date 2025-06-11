@@ -1,9 +1,18 @@
-import './globals.css';
-import { metadata } from './metadata';
-import Providers from './providers';
-import StyledComponentsRegistry from './registry';
+'use client';
 
-export { metadata };
+import { Inter } from 'next/font/google';
+import './globals.css';
+import { ThemeProvider } from 'styled-components';
+import { styleReset } from 'react95';
+import { createGlobalStyle } from 'styled-components';
+import original from 'react95/dist/themes/original';
+import StyledComponentsRegistry from './lib/registry';
+
+const GlobalStyles = createGlobalStyle`
+  ${styleReset}
+`;
+
+const inter = Inter({ subsets: ['latin'] });
 
 export default function RootLayout({
   children,
@@ -12,9 +21,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className={inter.className}>
         <StyledComponentsRegistry>
-          <Providers>{children}</Providers>
+          <GlobalStyles />
+          <ThemeProvider theme={original}>
+            {children}
+          </ThemeProvider>
         </StyledComponentsRegistry>
       </body>
     </html>
