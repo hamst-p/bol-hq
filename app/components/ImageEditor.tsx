@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button, Frame } from 'react95';
+import { useGesture } from '@use-gesture/react';
 
 interface ImageEditorProps {
   onSave: (editedImage: string) => void;
@@ -237,6 +238,26 @@ const ImageEditor: React.FC<ImageEditorProps> = ({ onSave, onImageLoad }) => {
     e.preventDefault();
   };
 
+  const bind = useGesture({
+    onPinch: ({ offset: [scale], movement: [rotation], event }) => {
+      event.preventDefault();
+      setOverlayPosition(prev => ({
+        ...prev,
+        scale: Math.max(0.1, scale * 0.01),
+        rotation: prev.rotation + rotation
+      }));
+      drawCanvas();
+    },
+    onDrag: ({ offset: [x, y] }) => {
+      setOverlayPosition(prev => ({
+        ...prev,
+        x: x,
+        y: y
+      }));
+      drawCanvas();
+    }
+  });
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-2">
@@ -266,11 +287,10 @@ const ImageEditor: React.FC<ImageEditorProps> = ({ onSave, onImageLoad }) => {
           style={{
             maxWidth: '100%',
             height: 'auto',
-            display: image ? 'block' : 'none'
+            display: image ? 'block' : 'none',
+            touchAction: 'none'
           }}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
+          {...bind()}
           onWheel={handleWheel}
         />
         {!image && (
