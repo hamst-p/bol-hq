@@ -39,7 +39,7 @@ export default function Header() {
               alt="Bolana logo"
               width={32}
               height={32}
-              style={{ marginRight: 8 }}
+              style={{ marginRight: 8, marginTop: -4 }}
             />
             Fuck It
           </Button>
