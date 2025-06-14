@@ -21,7 +21,7 @@ const metadata = {
 };
 
 // ネットワークの設定
-const networks = [mainnet, arbitrum];
+const networks = [mainnet, arbitrum] as any;
 
 // Wagmi Adapterの作成
 const wagmiAdapter = new WagmiAdapter({

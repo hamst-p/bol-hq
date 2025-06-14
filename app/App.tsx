@@ -5,7 +5,7 @@ import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adap
 
 // 0. Set up Solana Adapter
 const solanaWeb3JsAdapter = new SolanaAdapter({
-  wallets: [new PhantomWalletAdapter(), new SolflareWalletAdapter()]
+  wallets: [new PhantomWalletAdapter() as any, new SolflareWalletAdapter() as any]
 })
 
 // 1. Get projectId from environment variable
@@ -34,5 +34,5 @@ createAppKit({
 })
 
 export default function App() {
-  return <YourApp />
+  return <div>BOL HQ App</div>
 } 

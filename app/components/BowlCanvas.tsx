@@ -2,8 +2,8 @@
 
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Object3D, Group } from 'three';
 
 export default function BowlCanvas() {
