@@ -239,20 +239,54 @@ const ImageEditor: React.FC<ImageEditorProps> = ({ onSave, onImageLoad }) => {
   };
 
   const bind = useGesture({
-    onPinch: ({ offset: [scale], movement: [rotation], event }) => {
+    onPinch: ({ offset: [d], movement: [a], origin: [ox, oy], first, event }) => {
       event.preventDefault();
+      
+      if (first) {
+        const rect = canvasRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        
+        // タッチ開始時の中心点を保存
+        setDragStart({
+          x: ox - rect.left - overlayPosition.x,
+          y: oy - rect.top - overlayPosition.y
+        });
+      }
+
       setOverlayPosition(prev => ({
         ...prev,
-        scale: Math.max(0.1, scale * 0.01),
-        rotation: prev.rotation + rotation
+        scale: Math.max(0.1, prev.scale * (1 + (d - 1) * 0.01)),
+        rotation: prev.rotation + a * 0.1
       }));
       drawCanvas();
     },
-    onDrag: ({ offset: [x, y] }) => {
+    onDrag: ({ movement: [mx, my], first, event }) => {
+      event.preventDefault();
+      
+      if (first) {
+        const rect = canvasRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        
+        let clientX: number, clientY: number;
+        
+        if ((event as TouchEvent).touches) {
+          clientX = (event as TouchEvent).touches[0].clientX;
+          clientY = (event as TouchEvent).touches[0].clientY;
+        } else {
+          clientX = (event as MouseEvent).clientX;
+          clientY = (event as MouseEvent).clientY;
+        }
+        
+        setDragStart({
+          x: clientX - rect.left - overlayPosition.x,
+          y: clientY - rect.top - overlayPosition.y
+        });
+      }
+
       setOverlayPosition(prev => ({
         ...prev,
-        x: x,
-        y: y
+        x: prev.x + mx,
+        y: prev.y + my
       }));
       drawCanvas();
     }
