@@ -8,15 +8,18 @@ const solanaWeb3JsAdapter = new SolanaAdapter({
   wallets: [new PhantomWalletAdapter(), new SolflareWalletAdapter()]
 })
 
-// 1. Get projectId from https://cloud.reown.com
-const projectId = 'dc151cca0f374df08c4039b97af1b46d'
+// 1. Get projectId from environment variable
+const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID
+if (!projectId) {
+  throw new Error('NEXT_PUBLIC_REOWN_PROJECT_ID is not defined in .env.local')
+}
 
 // 2. Create a metadata object
 const metadata = {
   name: 'BOL-HQ-APP',
   description: 'AppKit Example',
-  url: 'https://reown.com/appkit',
-  icons: ['https://assets.reown.com/reown-profile-pic.png']
+  url: 'https://bol-hq.vercel.app/',
+  icons: ['https://bol-hq.vercel.app/_next/image?url=%2Fimages%2Fbolana.png&w=256&q=75']
 }
 
 // 3. Create modal
