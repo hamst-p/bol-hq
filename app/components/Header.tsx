@@ -65,7 +65,7 @@ export default function Header() {
                 <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
                   💰
                 </span>
-                <Link href="https://jup.ag/swap/SOL-JDjprgWYuidVGfExWzMp7Z81K3T6Qsg5aJCnG6srRLGW" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
+                <Link href="https://jup.ag/swap/SOL-JDjprgWYuidVGfExWzMp7Z81K3T6Qsg5aJCnG6srRLGW" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
                   Swap
                 </Link>
               </ListItem>
@@ -73,7 +73,7 @@ export default function Header() {
                 <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
                   📈
                 </span>
-                <Link href="https://dexscreener.com/solana/8eqej7m9banvn96ycizj2o8x3cr8ywmrfcxxjpsmwibc" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
+                <Link href="https://dexscreener.com/solana/8eqej7m9banvn96ycizj2o8x3cr8ywmrfcxxjpsmwibc" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
                   Chart
                 </Link>
               </ListItem>
@@ -90,7 +90,7 @@ export default function Header() {
                 <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
                   🎨
                 </span>
-                <Link href="https://memedepot.com/d/bol" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
+                <Link href="https://memedepot.com/d/bol" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
                   Meme Bank
                 </Link>
               </ListItem>
