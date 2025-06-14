@@ -2,7 +2,7 @@
 
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { Providers } from './providers';
+import App from './App';
 import StyledComponentsRegistry from './lib/registry';
 import { ThemeProvider } from 'styled-components';
 import { styleReset } from 'react95';
@@ -26,9 +26,9 @@ export default function RootLayout({
         <StyledComponentsRegistry>
           <GlobalStyles />
           <ThemeProvider theme={original}>
-            <Providers>
+            <App>
               {children}
-            </Providers>
+            </App>
           </ThemeProvider>
         </StyledComponentsRegistry>
       </body>

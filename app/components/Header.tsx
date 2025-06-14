@@ -132,7 +132,13 @@ export default function Header() {
         </div>
 
         <Button
-          onClick={() => openAppKit()}
+          onClick={() => {
+            try {
+              openAppKit();
+            } catch (error) {
+              console.error('Failed to open AppKit modal:', error);
+            }
+          }}
           style={{
             width: '150px',
             padding: '2px 4px',
