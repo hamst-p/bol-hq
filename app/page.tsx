@@ -22,7 +22,7 @@ export default function Home() {
           <li className="mb-2">is boowl.</li>
         </ol>
 
-        <ButtonGroup />
+        <ButtonGroup width={480} />
 
         <Video
           width={480}
