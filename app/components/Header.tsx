@@ -4,15 +4,10 @@ import React, { useState } from 'react';
 import { Frame, Button, List, ListItem, Divider } from 'react95';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useAppKit } from '@reown/appkit/react';
-import { useAccount } from 'wagmi';
+import WalletConnectButton from './WalletConnectButton';
 
 export default function Header() {
   const [open, setOpen] = useState(false);
-  const { open: openAppKit } = useAppKit();
-  const { address } = useAccount();
-
-  const displayAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Connect Wallet';
 
   return (
     <Frame style={{
@@ -131,25 +126,7 @@ export default function Header() {
           )}
         </div>
 
-        <Button
-          onClick={() => {
-            try {
-              openAppKit();
-            } catch (error) {
-              console.error('Failed to open AppKit modal:', error);
-            }
-          }}
-          style={{
-            width: '150px',
-            padding: '2px 4px',
-            height: '40px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          {displayAddress}
-        </Button>
+        <WalletConnectButton />
       </div>
     </Frame>
   );
