@@ -6,12 +6,14 @@ interface VideoProps {
   width?: number;
   height?: number;
   title?: string;
+  onClose?: () => void;
 }
 
 const Video: React.FC<VideoProps> = ({ 
   width = 320, 
   height = 240,
-  title = 'Video Player'
+  title = 'Video Player',
+  onClose
 }) => {
   const [containerWidth, setContainerWidth] = useState(width);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -100,36 +102,86 @@ const Video: React.FC<VideoProps> = ({
   };
 
   return (
-    <Window className="window" style={{ width: containerWidth }}>
-      <WindowHeader className="window-header">
-        <span>{title} - {currentVideoIndex + 1}/{videos.length}</span>
-      </WindowHeader>
-      <WindowContent style={{ padding: 2 }}>
-        <video
-          ref={videoRef}
-          src={videos[currentVideoIndex]}
-          width={containerWidth}
-          height={calculatedHeight}
-          playsInline
-          webkit-playsinline="true"
-          style={{ 
-            display: 'block',
-            maxWidth: '100%'
-          }}
-        />
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px' }}>
-          <Button onClick={handlePrevious} disabled={currentVideoIndex === 0}>
-            <Progman40 variant="32x32_4" />
-          </Button>
-          <Button onClick={handlePlayPause}>
-            {isPlaying ? <Msvfw32943 variant="32x32_4" /> : <Sndvol32303 variant="32x32_4" />}
-          </Button>
-          <Button onClick={handleNext} disabled={currentVideoIndex === videos.length - 1}>
-            <Progman41 variant="32x32_4" />
-          </Button>
-        </div>
-      </WindowContent>
-    </Window>
+    <>
+      <style jsx>{`
+        .window-title {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          position: relative;
+          width: 100%;
+        }
+        .close-button {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+        }
+        .close-icon {
+          display: inline-block;
+          width: 16px;
+          height: 16px;
+          margin-left: -1px;
+          margin-top: -1px;
+          transform: rotateZ(45deg);
+          position: relative;
+        }
+        .close-icon:before,
+        .close-icon:after {
+          content: '';
+          position: absolute;
+          background: black;
+        }
+        .close-icon:before {
+          height: 100%;
+          width: 3px;
+          left: 50%;
+          transform: translateX(-50%);
+        }
+        .close-icon:after {
+          height: 3px;
+          width: 100%;
+          left: 0px;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+      `}</style>
+      <Window className="window" style={{ width: containerWidth }}>
+        <WindowHeader style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <span>{title} - {currentVideoIndex + 1}/{videos.length}</span>
+          {onClose && (
+            <Button onClick={onClose} style={{ padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span className='close-icon' />
+            </Button>
+          )}
+        </WindowHeader>
+        <WindowContent style={{ padding: 2 }}>
+          <video
+            ref={videoRef}
+            src={videos[currentVideoIndex]}
+            width={containerWidth}
+            height={calculatedHeight}
+            playsInline
+            webkit-playsinline="true"
+            style={{ 
+              display: 'block',
+              maxWidth: '100%'
+            }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px' }}>
+            <Button onClick={handlePrevious} disabled={currentVideoIndex === 0}>
+              <Progman40 variant="32x32_4" />
+            </Button>
+            <Button onClick={handlePlayPause}>
+              {isPlaying ? <Msvfw32943 variant="32x32_4" /> : <Sndvol32303 variant="32x32_4" />}
+            </Button>
+            <Button onClick={handleNext} disabled={currentVideoIndex === videos.length - 1}>
+              <Progman41 variant="32x32_4" />
+            </Button>
+          </div>
+        </WindowContent>
+      </Window>
+    </>
   );
 };
 
