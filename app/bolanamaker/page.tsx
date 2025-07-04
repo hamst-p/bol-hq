@@ -95,6 +95,25 @@ export default function BolanaMaker() {
     setIsMobile(checkMobile());
   }, []);
 
+  // モバイル時にbodyのスクロールを無効化
+  useEffect(() => {
+    if (isMobile) {
+      // モバイルの場合はページ全体のスクロールを無効化
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
+      
+      return () => {
+        // クリーンアップ時に元に戻す
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
+        document.body.style.height = '';
+      };
+    }
+  }, [isMobile]);
+
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -184,10 +203,10 @@ export default function BolanaMaker() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-[#53bba5] overflow-auto">
+    <div className={`h-screen flex flex-col bg-[#53bba5] ${isMobile ? 'overflow-hidden' : 'overflow-auto'}`}>
       <Header />
 
-      <main className="flex-1 flex items-center justify-center pt-16">
+      <main className={`flex-1 flex items-center justify-center pt-16 ${isMobile ? 'overflow-hidden' : ''}`}>
         <WindowWrapper $imageWidth={imageWidth} $imageHeight={imageHeight} $isMobile={isMobile}>
           <Window resizable className='window'>
             <WindowHeader className='window-title'>

@@ -38,6 +38,7 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
   const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
   const [initialAngle, setInitialAngle] = useState(0);
   const [cursorType, setCursorType] = useState<'default' | 'move' | 'rotate'>('default');
+  const [lastPinchDistance, setLastPinchDistance] = useState<number | null>(null);
   const [bolhatImage, setBolhatImage] = useState<HTMLImageElement | null>(null);
   const [watermarkImage, setWatermarkImage] = useState<HTMLImageElement | null>(null);
 
@@ -322,6 +323,11 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
 
   // タッチイベント（モバイル用）
   const handleTouchStart = (e: React.TouchEvent) => {
+    // 複数のタッチポイントがある場合は、デフォルト動作を無効化
+    if (e.touches.length > 1) {
+      e.preventDefault();
+    }
+    
     if (!bolhat.visible || !bolhatImage) return;
     
     const canvas = canvasRef.current;
@@ -344,6 +350,11 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    // 複数のタッチポイントがある場合は、デフォルト動作を無効化
+    if (e.touches.length > 1) {
+      e.preventDefault();
+    }
+    
     if (!isDragging) return;
     
     e.preventDefault();
@@ -372,22 +383,29 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
       // ピンチ拡大縮小
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
-      const distance = Math.sqrt(
+      const currentDistance = Math.sqrt(
         Math.pow(touch2.clientX - touch1.clientX, 2) + 
         Math.pow(touch2.clientY - touch1.clientY, 2)
       );
       
-      // 前回の距離と比較してスケールを調整（簡易実装）
-      const scaleFactor = distance > 100 ? 1.03 : 0.97; // より細かい調整（3%ずつ）
-      setBolhat(prev => ({
-        ...prev,
-        scale: Math.max(0.1, Math.min(3, prev.scale * scaleFactor))
-      }));
+      if (lastPinchDistance !== null) {
+        const distanceRatio = currentDistance / lastPinchDistance;
+        // より細かく、安定した拡大縮小
+        const scaleFactor = Math.min(Math.max(distanceRatio, 0.95), 1.05);
+        
+        setBolhat(prev => ({
+          ...prev,
+          scale: Math.max(0.1, Math.min(3, prev.scale * scaleFactor))
+        }));
+      }
+      
+      setLastPinchDistance(currentDistance);
     }
   };
 
   const handleTouchEnd = () => {
     setIsDragging(false);
+    setLastPinchDistance(null); // ピンチ距離をリセット
   };
 
   // bolhatの状態が変わったら再描画
@@ -529,6 +547,7 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
             margin: '0 auto',
             border: 'none',
             outline: 'none',
+            touchAction: 'none', // ブラウザのデフォルトタッチ動作を無効化
             cursor: isDragging 
               ? (dragType === 'rotate' ? 'crosshair' : 'grabbing')
               : cursorType === 'move' 
