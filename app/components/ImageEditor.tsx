@@ -1,206 +1,446 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import { Button, Frame } from 'react95';
-import { useGesture } from '@use-gesture/react';
+import { Pbrush1 } from '@react95/icons';
 
 interface ImageEditorProps {
   onSave: (editedImage: string) => void;
-  onImageLoad: (width: number) => void;
+  onImageLoad: (width: number, height: number) => void;
 }
 
-interface OverlayPosition {
+export interface ImageEditorRef {
+  chooseImage: () => void;
+  save: () => void;
+  addBolhat: () => void;
+}
+
+interface BolhatState {
   x: number;
   y: number;
   scale: number;
-  rotation: number;
+  visible: boolean;
+  rotation: number; // 回転角度（度）
 }
 
-const ImageEditor: React.FC<ImageEditorProps> = ({ onSave, onImageLoad }) => {
-  const [image, setImage] = useState<string | null>(null);
-  const [overlayPosition, setOverlayPosition] = useState<OverlayPosition>({
+const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onImageLoad }, ref) => {
+  const [baseImage, setBaseImage] = useState<string | null>(null);
+  const [imageWidth, setImageWidth] = useState<number>(0);
+  const [imageHeight, setImageHeight] = useState<number>(0);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [bolhat, setBolhat] = useState<BolhatState>({
     x: 0,
     y: 0,
-    scale: 0.5,
+    scale: 1,
+    visible: false,
     rotation: 0
   });
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [dragType, setDragType] = useState<'move' | 'rotate'>('move');
+  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
+  const [initialAngle, setInitialAngle] = useState(0);
+  const [cursorType, setCursorType] = useState<'default' | 'move' | 'rotate'>('default');
+  const [bolhatImage, setBolhatImage] = useState<HTMLImageElement | null>(null);
+  const [watermarkImage, setWatermarkImage] = useState<HTMLImageElement | null>(null);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const overlayImageRef = useRef<HTMLImageElement | null>(null);
-  const watermarkRef = useRef<HTMLImageElement | null>(null);
+  
+  // bolhat画像を読み込み
+  React.useEffect(() => {
+    const img = new Image();
+    img.onload = () => setBolhatImage(img);
+    img.src = '/images/bolhat.png';
+  }, []);
 
-  useEffect(() => {
-    // BOLハット画像の読み込み
-    const overlayImg = new Image();
-    overlayImg.src = '/images/bolhat.png';
-    overlayImg.onload = () => {
-      console.log('loaded');
-      overlayImageRef.current = overlayImg;
-      const canvas = canvasRef.current;
-      if (canvas) {
-        setOverlayPosition(prev => ({
-          ...prev,
-          x: canvas.width / 2,
-          y: canvas.height / 2
-        }));
+  // ウォーターマーク画像（bolana.png）を読み込み
+  React.useEffect(() => {
+    const img = new Image();
+    img.onload = () => setWatermarkImage(img);
+    img.src = '/images/bolana.png';
+  }, []);
+
+  // 外部から呼び出し可能な関数を公開
+  useImperativeHandle(ref, () => ({
+    chooseImage: () => {
+      document.getElementById('image-upload')?.click();
+    },
+    save: () => {
+      if (baseImage && canvasRef.current) {
+        // 最終的な合成画像を作成
+        redrawCanvas();
+        const savedImage = canvasRef.current.toDataURL();
+        if (savedImage) {
+          onSave(savedImage);
+        }
       }
-      drawCanvas();
-    };
-    overlayImg.onerror = (error) => {
-      console.error('failed to load', error);
-    };
-
-    // ウォーターマーク画像の読み込み
-    const watermarkImg = new Image();
-    watermarkImg.src = '/images/bolana.png';
-    watermarkImg.onload = () => {
-      watermarkRef.current = watermarkImg;
-      drawCanvas();
-    };
-    watermarkImg.onerror = (error) => {
-      console.error('failed to load watermark', error);
-    };
-  }, [image]);
-
-  const addWatermark = (ctx: CanvasRenderingContext2D) => {
-    if (!watermarkRef.current || !ctx.canvas) return;
-
-    const canvas = ctx.canvas;
-    // キャンバスの短辺を基準に6.9%のサイズを計算
-    const baseSize = Math.min(canvas.width, canvas.height);
-    const watermarkSize = baseSize * 0.069;
-    
-    // 一時的なキャンバスを作成してグレースケール処理
-    const tempCanvas = document.createElement('canvas');
-    const tempCtx = tempCanvas.getContext('2d');
-    if (!tempCtx) return;
-
-    tempCanvas.width = watermarkSize;
-    tempCanvas.height = watermarkSize;
-
-    // 画像を一時キャンバスに描画
-    tempCtx.drawImage(watermarkRef.current, 0, 0, watermarkSize, watermarkSize);
-    
-    // グレースケール変換
-    const imageData = tempCtx.getImageData(0, 0, watermarkSize, watermarkSize);
-    const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-      const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-      data[i] = avg;     // R
-      data[i + 1] = avg; // G
-      data[i + 2] = avg; // B
+    },
+    addBolhat: () => {
+      setBolhat({
+        x: imageWidth / 2,
+        y: imageHeight / 2,
+        scale: 0.3,
+        visible: true,
+        rotation: 0
+      });
     }
-    tempCtx.putImageData(imageData, 0, 0);
+  }));
 
-    // メインキャンバスに半透明で描画
-    ctx.save();
-    ctx.globalAlpha = 0.69;
-    ctx.drawImage(
-      tempCanvas,
-      canvas.width - watermarkSize - 10,
-      canvas.height - watermarkSize - 10,
-      watermarkSize,
-      watermarkSize
-    );
-    ctx.restore();
-  };
-
-  const drawCanvas = () => {
-    if (!canvasRef.current || !image) return;
+  // キャンバスを再描画
+  const redrawCanvas = () => {
+    if (!canvasRef.current || !baseImage) return;
     
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const baseImg = new Image();
-    baseImg.onload = () => {
+    // ベース画像を描画
+    const img = new Image();
+    img.onload = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(baseImg, 0, 0);
-
-      if (overlayImageRef.current) {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      
+      // bolhatを描画
+      if (bolhat.visible && bolhatImage) {
+        const bolhatWidth = bolhatImage.width * bolhat.scale;
+        const bolhatHeight = bolhatImage.height * bolhat.scale;
+        
         ctx.save();
-        ctx.translate(overlayPosition.x, overlayPosition.y);
-        ctx.rotate((overlayPosition.rotation * Math.PI) / 180);
-        ctx.scale(overlayPosition.scale, overlayPosition.scale);
+        ctx.translate(bolhat.x, bolhat.y);
+        ctx.rotate((bolhat.rotation * Math.PI) / 180); // 度をラジアンに変換
         ctx.drawImage(
-          overlayImageRef.current,
-          -overlayImageRef.current.width / 2,
-          -overlayImageRef.current.height / 2
+          bolhatImage,
+          -bolhatWidth / 2,
+          -bolhatHeight / 2,
+          bolhatWidth,
+          bolhatHeight
         );
         ctx.restore();
       }
 
-      // プレビュー時にもウォーターマークを追加
-      addWatermark(ctx);
+      // ウォーターマーク（bolana.png）を右下に描画
+      if (watermarkImage) {
+        ctx.save();
+        ctx.globalAlpha = 0.2; // 80%透過（20%不透明）
+        
+        // ウォーターマークのサイズを調整（画像サイズの1/8程度）
+        const watermarkScale = Math.min(canvas.width, canvas.height) / 8 / Math.max(watermarkImage.width, watermarkImage.height);
+        const watermarkWidth = watermarkImage.width * watermarkScale;
+        const watermarkHeight = watermarkImage.height * watermarkScale;
+        
+        // 右下に配置（マージン10px）
+        const watermarkX = canvas.width - watermarkWidth - 10;
+        const watermarkY = canvas.height - watermarkHeight - 10;
+        
+        ctx.drawImage(
+          watermarkImage,
+          watermarkX,
+          watermarkY,
+          watermarkWidth,
+          watermarkHeight
+        );
+        
+        ctx.restore();
+      }
     };
-    baseImg.src = image;
+    img.src = baseImage;
   };
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    
-    setIsDragging(true);
-    setDragStart({
-      x: e.clientX - overlayPosition.x,
-      y: e.clientY - overlayPosition.y
+  // bolhatを追加
+  const addBolhat = () => {
+    setBolhat({
+      x: imageWidth / 2,
+      y: imageHeight / 2,
+      scale: 0.3,
+      visible: true,
+      rotation: 0
     });
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDragging) return;
+  // bolhatを削除
+  const removeBolhat = () => {
+    setBolhat(prev => ({ ...prev, visible: false }));
+  };
 
-    const newX = e.clientX - dragStart.x;
-    const newY = e.clientY - dragStart.y;
+  // マウス位置からの角度を計算
+  const getAngleFromMouse = (mouseX: number, mouseY: number): number => {
+    const dx = mouseX - bolhat.x;
+    const dy = mouseY - bolhat.y;
+    return Math.atan2(dy, dx) * (180 / Math.PI);
+  };
+
+  // マウスイベント（PC用）
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // 右クリックは無視（右クリック時はonContextMenuで処理）
+    if (e.button !== 0) return;
     
-    setOverlayPosition(prev => ({
-      ...prev,
-      x: newX,
-      y: newY
-    }));
-    drawCanvas();
+    if (!bolhat.visible || !bolhatImage) return;
+    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // bolhatの範囲内かチェック
+    const bolhatWidth = bolhatImage.width * bolhat.scale;
+    const bolhatHeight = bolhatImage.height * bolhat.scale;
+    
+    // 回転を考慮した範囲判定
+    const dx = x - bolhat.x;
+    const dy = y - bolhat.y;
+    const cos = Math.cos((-bolhat.rotation * Math.PI) / 180);
+    const sin = Math.sin((-bolhat.rotation * Math.PI) / 180);
+    const rotatedX = dx * cos - dy * sin;
+    const rotatedY = dx * sin + dy * cos;
+    
+    if (Math.abs(rotatedX) <= bolhatWidth / 2 && Math.abs(rotatedY) <= bolhatHeight / 2) {
+      setIsDragging(true);
+      setLastMousePos({ x, y });
+      setDragType('move'); // 左クリックは移動のみ
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    if (dragType === 'rotate') {
+      // 回転処理
+      const currentAngle = getAngleFromMouse(x, y);
+      let angleDiff = currentAngle - initialAngle;
+      
+      // 角度差を1度単位に制限してゆっくり回転させる
+      angleDiff = Math.round(angleDiff / 3) * 1; // 3ピクセル移動で1度回転
+      
+      setBolhat(prev => ({
+        ...prev,
+        rotation: (prev.rotation + angleDiff) % 360
+      }));
+      
+      setInitialAngle(currentAngle);
+    } else {
+      // 移動処理
+      const dx = x - lastMousePos.x;
+      const dy = y - lastMousePos.y;
+      
+      setBolhat(prev => ({
+        ...prev,
+        x: Math.max(0, Math.min(imageWidth, prev.x + dx)),
+        y: Math.max(0, Math.min(imageHeight, prev.y + dy))
+      }));
+      
+      setLastMousePos({ x, y });
+    }
   };
 
   const handleMouseUp = () => {
     setIsDragging(false);
+    setDragType('move');
   };
 
-  const handleScale = (delta: number) => {
-    setOverlayPosition(prev => ({
+  // 右クリック処理（回転開始）
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault(); // コンテキストメニューを無効化
+    
+    if (!bolhat.visible || !bolhatImage) return;
+    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // bolhatの範囲内かチェック
+    const bolhatWidth = bolhatImage.width * bolhat.scale;
+    const bolhatHeight = bolhatImage.height * bolhat.scale;
+    
+    // 回転を考慮した範囲判定
+    const dx = x - bolhat.x;
+    const dy = y - bolhat.y;
+    const cos = Math.cos((-bolhat.rotation * Math.PI) / 180);
+    const sin = Math.sin((-bolhat.rotation * Math.PI) / 180);
+    const rotatedX = dx * cos - dy * sin;
+    const rotatedY = dx * sin + dy * cos;
+    
+    if (Math.abs(rotatedX) <= bolhatWidth / 2 && Math.abs(rotatedY) <= bolhatHeight / 2) {
+      setIsDragging(true);
+      setLastMousePos({ x, y });
+      setDragType('rotate'); // 右クリックは回転
+      setInitialAngle(getAngleFromMouse(x, y));
+    }
+  };
+
+  // マウスムーブ時のカーソル更新（ドラッグ中でない場合）
+  const handleMouseHover = (e: React.MouseEvent) => {
+    if (isDragging || !bolhat.visible || !bolhatImage) {
+      setCursorType('default');
+      return;
+    }
+    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // bolhatの範囲内かチェック
+    const bolhatWidth = bolhatImage.width * bolhat.scale;
+    const bolhatHeight = bolhatImage.height * bolhat.scale;
+    const dx = x - bolhat.x;
+    const dy = y - bolhat.y;
+    const cos = Math.cos((-bolhat.rotation * Math.PI) / 180);
+    const sin = Math.sin((-bolhat.rotation * Math.PI) / 180);
+    const rotatedX = dx * cos - dy * sin;
+    const rotatedY = dx * sin + dy * cos;
+    
+    if (Math.abs(rotatedX) <= bolhatWidth / 2 && Math.abs(rotatedY) <= bolhatHeight / 2) {
+      setCursorType('move'); // bolhat内では移動カーソル
+    } else {
+      setCursorType('default');
+    }
+  };
+
+  // ホイールイベント（拡大縮小）
+  const handleWheel = (e: React.WheelEvent) => {
+    if (!bolhat.visible) return;
+    
+    e.preventDefault();
+    const scaleDelta = e.deltaY > 0 ? 0.97 : 1.03; // より細かい調整（3%ずつ）
+    
+    setBolhat(prev => ({
       ...prev,
-      scale: Math.max(0.1, prev.scale + delta)
+      scale: Math.max(0.1, Math.min(3, prev.scale * scaleDelta))
     }));
-    drawCanvas();
   };
 
-  const handleRotate = (delta: number) => {
-    setOverlayPosition(prev => ({
-      ...prev,
-      rotation: prev.rotation + delta
-    }));
-    drawCanvas();
+  // タッチイベント（モバイル用）
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!bolhat.visible || !bolhatImage) return;
+    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    
+    const bolhatWidth = bolhatImage.width * bolhat.scale;
+    const bolhatHeight = bolhatImage.height * bolhat.scale;
+    const dx = x - bolhat.x;
+    const dy = y - bolhat.y;
+    
+    if (Math.abs(dx) <= bolhatWidth / 2 && Math.abs(dy) <= bolhatHeight / 2) {
+      setIsDragging(true);
+      setLastMousePos({ x, y });
+    }
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    
+    if (e.touches.length === 1) {
+      // 移動
+      const touch = e.touches[0];
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      
+      const dx = x - lastMousePos.x;
+      const dy = y - lastMousePos.y;
+      
+      setBolhat(prev => ({
+        ...prev,
+        x: Math.max(0, Math.min(imageWidth, prev.x + dx)),
+        y: Math.max(0, Math.min(imageHeight, prev.y + dy))
+      }));
+      
+      setLastMousePos({ x, y });
+    } else if (e.touches.length === 2) {
+      // ピンチ拡大縮小
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.sqrt(
+        Math.pow(touch2.clientX - touch1.clientX, 2) + 
+        Math.pow(touch2.clientY - touch1.clientY, 2)
+      );
+      
+      // 前回の距離と比較してスケールを調整（簡易実装）
+      const scaleFactor = distance > 100 ? 1.03 : 0.97; // より細かい調整（3%ずつ）
+      setBolhat(prev => ({
+        ...prev,
+        scale: Math.max(0.1, Math.min(3, prev.scale * scaleFactor))
+      }));
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
+  // bolhatの状態が変わったら再描画
+  React.useEffect(() => {
+    if (baseImage) {
+      redrawCanvas();
+    }
+  }, [baseImage, bolhat, bolhatImage, watermarkImage]);
+
+  // 画像ファイル処理
+  const processImageFile = (file: File) => {
+    if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
           if (canvasRef.current) {
             const canvas = canvasRef.current;
-            canvas.width = img.width;
-            canvas.height = img.height;
+            
+            // 最大サイズを設定（ウィンドウに収まるように）
+            const maxWidth = 750;
+            const maxHeight = 450;
+            
+            let { width, height } = img;
+            
+            // アスペクト比を維持しながらサイズ調整
+            if (width > maxWidth) {
+              height = (height * maxWidth) / width;
+              width = maxWidth;
+            }
+            if (height > maxHeight) {
+              width = (width * maxHeight) / height;
+              height = maxHeight;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
             const ctx = canvas.getContext('2d');
             if (ctx) {
-              ctx.drawImage(img, 0, 0);
-              setImage(canvas.toDataURL());
-              onImageLoad(img.width);
-              setOverlayPosition(prev => ({
-                ...prev,
-                x: canvas.width / 2,
-                y: canvas.height / 2
-              }));
+              ctx.drawImage(img, 0, 0, width, height);
+              setBaseImage(canvas.toDataURL());
+              setImageWidth(width);
+              setImageHeight(height);
+              onImageLoad(width, height);
+              // bolhatを初期位置に自動配置
+              setBolhat({ 
+                x: width / 2, 
+                y: height / 2, 
+                scale: 0.3, 
+                visible: true,
+                rotation: 0
+              });
             }
           }
         };
@@ -210,100 +450,37 @@ const ImageEditor: React.FC<ImageEditorProps> = ({ onSave, onImageLoad }) => {
     }
   };
 
-  const handleSave = () => {
-    if (image && canvasRef.current) {
-      drawCanvas();  
-      const savedImage = canvasRef.current.toDataURL();
-      onSave(savedImage);
+  // 基本画像のアップロード
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      processImageFile(file);
     }
   };
 
-  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+  // ドラッグドロップイベントハンドラー
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    if (!image) return;
+    setIsDragOver(true);
+  };
 
-    // シフトキーが押されている場合は、より細かい調整を可能に
-    const scaleFactor = e.shiftKey ? 0.01 : 0.03;
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
     
-    // 現在のスケールに応じて変化量を調整
-    const delta = e.deltaY > 0 
-      ? -scaleFactor * overlayPosition.scale
-      : scaleFactor * overlayPosition.scale;
-
-    handleScale(delta);
-  };
-
-  // Frame内でのホイールイベントを防止
-  const preventScroll = (e: React.WheelEvent) => {
-    e.preventDefault();
-  };
-
-  const bind = useGesture({
-    onPinch: ({ offset: [d], movement: [a], origin: [ox, oy], first, event }) => {
-      event.preventDefault();
-      
-      if (first) {
-        const rect = canvasRef.current?.getBoundingClientRect();
-        if (!rect) return;
-        
-        // タッチ開始時の中心点を保存
-        setDragStart({
-          x: ox - rect.left - overlayPosition.x,
-          y: oy - rect.top - overlayPosition.y
-        });
-      }
-
-      setOverlayPosition(prev => ({
-        ...prev,
-        scale: Math.max(0.1, prev.scale * (1 + (d - 1) * 0.01)),
-        rotation: prev.rotation + a * 0.1
-      }));
-      drawCanvas();
-    },
-    onDrag: ({ movement: [mx, my], first, event }) => {
-      event.preventDefault();
-      
-      if (first) {
-        const rect = canvasRef.current?.getBoundingClientRect();
-        if (!rect) return;
-        
-        let clientX: number, clientY: number;
-        
-        if ((event as TouchEvent).touches) {
-          clientX = (event as TouchEvent).touches[0].clientX;
-          clientY = (event as TouchEvent).touches[0].clientY;
-        } else {
-          clientX = (event as MouseEvent).clientX;
-          clientY = (event as MouseEvent).clientY;
-        }
-        
-        setDragStart({
-          x: clientX - rect.left - overlayPosition.x,
-          y: clientY - rect.top - overlayPosition.y
-        });
-      }
-
-      setOverlayPosition(prev => ({
-        ...prev,
-        x: prev.x + mx,
-        y: prev.y + my
-      }));
-      drawCanvas();
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      processImageFile(files[0]);
     }
-  });
+  };
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex gap-2">
-        <Button onClick={() => document.getElementById('image-upload')?.click()}>
-          Choose image
-        </Button>
-        {image && (
-          <Button onClick={handleSave}>
-            Save
-          </Button>
-        )}
-      </div>
+    <div className="w-full h-full">
       <input
         type="file"
         accept="image/*"
@@ -311,30 +488,92 @@ const ImageEditor: React.FC<ImageEditorProps> = ({ onSave, onImageLoad }) => {
         style={{ display: 'none' }}
         id="image-upload"
       />
+
+      {/* Main Canvas */}
       <Frame 
         variant="field" 
-        className="relative"
-        onWheel={preventScroll}
+        className={`relative w-full ${isDragOver ? 'bg-blue-50 border-blue-300' : ''}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        style={{ 
+          height: baseImage ? `${imageHeight}px` : '500px', 
+          minHeight: baseImage ? `${imageHeight}px` : '500px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+          padding: baseImage ? '0' : '1rem'
+        }}
       >
         <canvas
           ref={canvasRef}
+          onMouseDown={handleMouseDown}
+          onMouseMove={(e) => {
+            handleMouseMove(e);
+            handleMouseHover(e);
+          }}
+          onMouseUp={handleMouseUp}
+          onWheel={handleWheel}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onContextMenu={handleContextMenu}
           style={{
             maxWidth: '100%',
+            maxHeight: '100%',
+            width: 'auto',
             height: 'auto',
-            display: image ? 'block' : 'none',
-            touchAction: 'none'
+            display: baseImage ? 'block' : 'none',
+            objectFit: 'contain',
+            margin: '0 auto',
+            border: 'none',
+            outline: 'none',
+            cursor: isDragging 
+              ? (dragType === 'rotate' ? 'crosshair' : 'grabbing')
+              : cursorType === 'move' 
+                ? 'grab' 
+                : 'default'
           }}
-          {...bind()}
-          onWheel={handleWheel}
         />
-        {!image && (
-          <div className="p-4 text-center text-gray-500 absolute inset-0 flex items-center justify-center">
-            Choose image.
+        {!baseImage && (
+          <div 
+            className={`absolute inset-0 flex flex-col items-center justify-center text-center ${
+              isDragOver ? 'text-blue-600' : 'text-gray-500'
+            }`}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              width: '100%',
+              height: '100%',
+              minHeight: '500px'
+            }}
+          >
+            <div className="mb-4">
+              <Pbrush1 
+                style={{ 
+                  width: '64px', 
+                  height: '64px',
+                  imageRendering: 'pixelated'
+                }} 
+              />
+            </div>
+            <div className="text-lg font-medium mb-2">
+              {isDragOver ? 'Drop your image here' : 'Choose an image or drag & drop'}
+            </div>
+            <div className="text-sm">
+              Supports: JPG, PNG, GIF, WebP
+            </div>
           </div>
         )}
       </Frame>
     </div>
   );
-};
+});
+
+ImageEditor.displayName = 'ImageEditor';
 
 export default ImageEditor; 
