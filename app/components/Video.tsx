@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Window, WindowHeader, WindowContent, Button } from 'react95';
-import { Msvfw32943, Sndvol32303, Progman40, Progman41 } from '@react95/icons';
+import { Systray220, Systray221, Wmsui322226, Wmsui322225 } from '@react95/icons';
 
 interface VideoProps {
   width?: number;
@@ -170,13 +170,17 @@ const Video: React.FC<VideoProps> = ({
           />
           <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px' }}>
             <Button onClick={handlePrevious} disabled={currentVideoIndex === 0}>
-              <Progman40 variant="32x32_4" />
+              <Wmsui322226 variant="32x32_4" />
             </Button>
             <Button onClick={handlePlayPause}>
-              {isPlaying ? <Msvfw32943 variant="32x32_4" /> : <Sndvol32303 variant="32x32_4" />}
+              {isPlaying ? (
+                <Systray221 variant="16x16_4" style={{ transform: 'scale(1.5)' }} />
+              ) : (
+                <Systray220 variant="16x16_4" style={{ transform: 'scale(1.5)' }} />
+              )}
             </Button>
             <Button onClick={handleNext} disabled={currentVideoIndex === videos.length - 1}>
-              <Progman41 variant="32x32_4" />
+              <Wmsui322225 variant="32x32_4" />
             </Button>
           </div>
         </WindowContent>

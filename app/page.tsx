@@ -22,10 +22,6 @@ export default function Home() {
       <main className="flex-1 flex flex-col items-center gap-8 p-8 sm:p-20">
         <FloatingBowl />
 
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left">
-          <li className="mb-2">is boowl.</li>
-        </ol>
-
         <ButtonGroup width={480} />
 
         {isWindowOpen && (
