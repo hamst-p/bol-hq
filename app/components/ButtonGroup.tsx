@@ -111,7 +111,7 @@ const ButtonGroup: React.FC<ButtonGroupProps> = ({ width = 480 }) => {
           <div className="absolute inset-0 bg-black bg-opacity-50" onClick={handleClose}></div>
           <Window className="window w-full max-w-sm sm:max-w-md">
             <WindowHeader style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <span>What is BOL?</span>
+              <span style={{ fontFamily: 'inherit' }}>What is BOL<span style={{ fontWeight: 'normal' }}>?</span></span>
               <Button onClick={handleClose} style={{ padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span className='close-icon' />
               </Button>
