@@ -89,7 +89,7 @@ export default function Header() {
                   Meme Bank
                 </Link>
               </ListItem>
-              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <ListItem disabled style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
                   👆
                 </span>
@@ -114,11 +114,11 @@ export default function Header() {
                 </Link>
               </ListItem>
               <Divider />
-              <ListItem disabled style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span role="img" aria-label="🔙" style={{ marginLeft: '8px' }}>
                   🔙
                 </span>
-                <Link href="/logout" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
+                <Link href="/" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
                   Logout
                 </Link>
               </ListItem>

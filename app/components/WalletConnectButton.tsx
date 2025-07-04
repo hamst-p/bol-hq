@@ -58,6 +58,7 @@ export default function WalletConnectButton() {
   return (
     <Button
       onClick={handleClick}
+      disabled={true}
       style={{
         width: '150px',
         padding: '2px 4px',

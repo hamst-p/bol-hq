@@ -25,6 +25,49 @@ const ButtonGroup: React.FC<ButtonGroupProps> = ({ width = 480 }) => {
 
   return (
     <>
+      <style jsx>{`
+        .window-title {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          position: relative;
+          width: 100%;
+        }
+        .close-button {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+        }
+        .close-icon {
+          display: inline-block;
+          width: 16px;
+          height: 16px;
+          margin-left: -1px;
+          margin-top: -1px;
+          transform: rotateZ(45deg);
+          position: relative;
+        }
+        .close-icon:before,
+        .close-icon:after {
+          content: '';
+          position: absolute;
+          background: black;
+        }
+        .close-icon:before {
+          height: 100%;
+          width: 3px;
+          left: 50%;
+          transform: translateX(-50%);
+        }
+        .close-icon:after {
+          height: 3px;
+          width: 100%;
+          left: 0px;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+      `}</style>
       <div style={{ width: containerWidth }} className="mx-auto">
         <div className="flex flex-wrap gap-2 justify-center items-center">
           <Button 
@@ -44,7 +87,7 @@ const ButtonGroup: React.FC<ButtonGroupProps> = ({ width = 480 }) => {
             </Button>
           </Link>
           <Link href="/tapitwebol">
-            <Button className="text-xs sm:text-sm px-2 sm:px-4">
+            <Button disabled className="text-xs sm:text-sm px-2 sm:px-4">
               <span className="hidden sm:inline">TAP IT WE BOL</span>
               <span className="sm:hidden">TAP WE BOL</span>
             </Button>
@@ -67,21 +110,11 @@ const ButtonGroup: React.FC<ButtonGroupProps> = ({ width = 480 }) => {
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="absolute inset-0 bg-black bg-opacity-50" onClick={handleClose}></div>
           <Window className="window w-full max-w-sm sm:max-w-md">
-            <WindowHeader className="window-header">
+            <WindowHeader style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
               <span>What is BOL?</span>
-              <button
-                onClick={handleClose}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                style={{ 
-                  fontFamily: 'Px437 IBM VGA8',
-                  fontSize: '14px',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                ×
-              </button>
+              <Button onClick={handleClose} style={{ padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span className='close-icon' />
+              </Button>
             </WindowHeader>
             <WindowContent>
               <div className="text-sm leading-relaxed">
