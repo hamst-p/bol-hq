@@ -557,7 +557,7 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
         />
         {!baseImage && (
           <div 
-            className={`absolute inset-0 flex flex-col items-center justify-center text-center ${
+            className={`absolute inset-0 flex flex-col items-center justify-center text-center cursor-pointer ${
               isDragOver ? 'text-blue-600' : 'text-gray-500'
             }`}
             style={{
@@ -570,6 +570,7 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
               height: '100%',
               minHeight: '500px'
             }}
+            onClick={() => document.getElementById('image-upload')?.click()}
           >
             <div className="mb-4">
               <Pbrush1 
