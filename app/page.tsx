@@ -19,7 +19,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col bg-[#53bba5]">
       <Header />
 
-      <main className="flex-1 flex flex-col items-center gap-8 p-8 sm:p-20">
+      <main className="flex-1 flex flex-col items-center gap-4 p-4 sm:p-6">
         <FloatingBowl />
 
         <ButtonGroup width={480} />

@@ -68,37 +68,37 @@ const ButtonGroup: React.FC<ButtonGroupProps> = ({ width = 480 }) => {
           transform: translateY(-50%);
         }
       `}</style>
-      <div style={{ width: containerWidth }} className="mx-auto">
-        <div className="flex flex-wrap gap-2 justify-center items-center">
+      <div style={{ width: containerWidth }} className="mx-auto mb-2">
+        <div className="flex flex-wrap gap-1.5 justify-center items-center">
           <Button 
-            className="text-xs sm:text-sm px-2 sm:px-4"
+            className="text-xs sm:text-sm px-2 sm:px-3"
             onClick={() => setShowModal(true)}
           >
             What is BOL?
           </Button>
           <Link href="https://jup.ag/swap/SOL-JDjprgWYuidVGfExWzMp7Z81K3T6Qsg5aJCnG6srRLGW" target="_blank" rel="noopener noreferrer">
-            <Button className="text-xs sm:text-sm px-2 sm:px-4">
+            <Button className="text-xs sm:text-sm px-2 sm:px-3">
               Swap
             </Button>
           </Link>
           <Link href="https://memedepot.com/d/bol" target="_blank" rel="noopener noreferrer">
-            <Button className="text-xs sm:text-sm px-2 sm:px-4">
+            <Button className="text-xs sm:text-sm px-2 sm:px-3">
               Meme Bank
             </Button>
           </Link>
           <Link href="/tapitwebol">
-            <Button disabled className="text-xs sm:text-sm px-2 sm:px-4">
+            <Button disabled className="text-xs sm:text-sm px-2 sm:px-3">
               <span className="hidden sm:inline">TAP IT WE BOL</span>
               <span className="sm:hidden">TAP WE BOL</span>
             </Button>
           </Link>
           <Link href="/bolanamaker">
-            <Button className="text-xs sm:text-sm px-2 sm:px-4">
+            <Button className="text-xs sm:text-sm px-2 sm:px-3">
               Bolana Maker
             </Button>
           </Link>
           <Link href="/3d">
-            <Button className="text-xs sm:text-sm px-2 sm:px-4">
+            <Button className="text-xs sm:text-sm px-2 sm:px-3">
               <span className="hidden sm:inline">3D Bol Experiment</span>
               <span className="sm:hidden">3D Bol</span>
             </Button>
