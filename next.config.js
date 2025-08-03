@@ -3,7 +3,7 @@ const nextConfig = {
   compiler: {
     styledComponents: true,
   },
-  transpilePackages: ['@reown/appkit', '@reown/appkit-adapter-wagmi', '@react95/core', '@react95/icons', 'styled-components', 'three', '@react-three/fiber', '@react-three/drei'],
+  transpilePackages: ['@react95/core', '@react95/icons', 'styled-components', 'three', '@react-three/fiber', '@react-three/drei', '@privy-io/react-auth'],
   webpack: (config, { isServer, dev }) => {
     config.externals = [...config.externals, { canvas: 'canvas' }];
     

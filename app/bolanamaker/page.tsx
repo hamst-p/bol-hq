@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import {
@@ -17,7 +18,7 @@ import {
 import styled from 'styled-components';
 import ImageEditor, { ImageEditorRef } from '../components/ImageEditor';
 
-const WindowWrapper = styled.div<{ $imageWidth?: number, $imageHeight?: number, $isMobile: boolean }>`
+const WindowWrapper = styled.div<{ $imageWidth?: number, $imageHeight?: number, $isMobile: boolean, $viewportWidth: number, $viewportHeight: number }>`
   .window-title {
     display: flex;
     align-items: center;
@@ -54,20 +55,31 @@ const WindowWrapper = styled.div<{ $imageWidth?: number, $imageHeight?: number, 
   .window {
     width: ${props => {
       if (props.$imageWidth) {
-        // 画像幅 + WindowContentの左右パディング(4px × 2) + ウィンドウボーダー等(約8px)
-        const calculatedWidth = props.$imageWidth + 16;
-        // ビューポートの90%を上限とし、最小幅も考慮
+        // 画像幅 + WindowContentの左右パディング(8px × 2) + ウィンドウボーダー等(約8px)
+        const calculatedWidth = props.$imageWidth + 24;
+        // ビューポートの95%を上限とし、最小幅も考慮
+        const maxViewportWidth = props.$viewportWidth * 0.95;
+        const finalWidth = Math.min(calculatedWidth, maxViewportWidth);
         return props.$isMobile 
-          ? `${Math.max(calculatedWidth, 320)}px` 
-          : `${Math.max(calculatedWidth, 400)}px`;
+          ? `${Math.max(finalWidth, 320)}px` 
+          : `${Math.max(finalWidth, 400)}px`;
       }
       return props.$isMobile ? '90vw' : '800px';
     }};
-    height: ${props => props.$imageHeight ? `${props.$imageHeight + 100}px` : 'auto'};
-    max-width: 90vw;
-    max-height: 90vh;
+    height: ${props => {
+      if (props.$imageHeight) {
+        // 画像高さ + ヘッダー(約32px) + ツールバー(約32px) + WindowContentパディング(上下10px) + ボーダー等(約8px)
+        const calculatedHeight = props.$imageHeight + 82;
+        // ビューポートの95%を上限とする
+        const maxViewportHeight = props.$viewportHeight * 0.95;
+        return `${Math.min(calculatedHeight, maxViewportHeight)}px`;
+      }
+      return 'auto';
+    }};
+    max-width: 95vw;
+    max-height: 95vh;
     min-width: ${props => props.$isMobile ? '320px' : '400px'};
-    min-height: 500px;
+    min-height: ${props => props.$imageHeight ? 'auto' : '500px'};
   }
   .footer {
     display: block;
@@ -79,6 +91,7 @@ const WindowWrapper = styled.div<{ $imageWidth?: number, $imageHeight?: number, 
 `;
 
 export default function BolanaMaker() {
+  const router = useRouter();
   const [editedImage, setEditedImage] = useState<string | null>(null);
   const [baseImage, setBaseImage] = useState<string | null>(null);
   const [imageWidth, setImageWidth] = useState<number | undefined>(undefined);
@@ -86,6 +99,9 @@ export default function BolanaMaker() {
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [isFileMenuOpen, setIsFileMenuOpen] = useState<boolean>(false);
   const [isEditMenuOpen, setIsEditMenuOpen] = useState<boolean>(false);
+  const [viewportWidth, setViewportWidth] = useState<number>(1200);
+  const [viewportHeight, setViewportHeight] = useState<number>(800);
+  const [bolhats, setBolhats] = useState<any[]>([]);
   const imageEditorRef = useRef<ImageEditorRef>(null);
 
   useEffect(() => {
@@ -94,6 +110,39 @@ export default function BolanaMaker() {
     };
     setIsMobile(checkMobile());
   }, []);
+
+  // ビューポートサイズを監視
+  useEffect(() => {
+    const updateViewportSize = () => {
+      setViewportWidth(window.innerWidth);
+      setViewportHeight(window.innerHeight);
+    };
+
+    // 初期サイズを設定
+    updateViewportSize();
+
+    // リサイズイベントを監視
+    window.addEventListener('resize', updateViewportSize);
+
+    return () => {
+      window.removeEventListener('resize', updateViewportSize);
+    };
+  }, []);
+
+  // bolhatの状態を監視
+  useEffect(() => {
+    const updateBolhats = () => {
+      if (imageEditorRef.current) {
+        const currentBolhats = imageEditorRef.current.getBolhats();
+        setBolhats(currentBolhats);
+      }
+    };
+
+    // 定期的にbolhatの状態を更新
+    const interval = setInterval(updateBolhats, 100);
+
+    return () => clearInterval(interval);
+  }, [baseImage]);
 
   // モバイル時にbodyのスクロールを無効化
   useEffect(() => {
@@ -190,6 +239,9 @@ export default function BolanaMaker() {
     if (action === 'view') {
       // Choose Image機能を呼び出し
       imageEditorRef.current?.chooseImage();
+    } else if (action === 'properties') {
+      // Exit - トップページに移動
+      router.push('/');
     }
   };
 
@@ -199,6 +251,12 @@ export default function BolanaMaker() {
     
     if (action === 'add-bolhat') {
       imageEditorRef.current?.addBolhat();
+    } else if (action.startsWith('select-bolhat-')) {
+      const bolhatId = action.replace('select-bolhat-', '');
+      imageEditorRef.current?.selectBolhat(bolhatId);
+    } else if (action.startsWith('delete-bolhat-')) {
+      const bolhatId = action.replace('delete-bolhat-', '');
+      imageEditorRef.current?.deleteBolhat(bolhatId);
     }
   };
 
@@ -207,8 +265,14 @@ export default function BolanaMaker() {
       <Header />
 
       <main className={`flex-1 flex items-center justify-center pt-16 ${isMobile ? 'overflow-hidden' : ''}`}>
-        <WindowWrapper $imageWidth={imageWidth} $imageHeight={imageHeight} $isMobile={isMobile}>
-          <Window resizable className='window'>
+        <WindowWrapper 
+          $imageWidth={imageWidth} 
+          $imageHeight={imageHeight} 
+          $isMobile={isMobile}
+          $viewportWidth={viewportWidth}
+          $viewportHeight={viewportHeight}
+        >
+          <Window className='window'>
             <WindowHeader className='window-title'>
               <span>bolanamaker.exe</span>
               <Button>
@@ -252,12 +316,14 @@ export default function BolanaMaker() {
                       <Separator />
                       <MenuListItem 
                         size='sm'
+                        disabled
                         onClick={() => handleMenuItemClick('paste-shortcut')}
                       >
                         Undo
                       </MenuListItem>
                       <MenuListItem 
                         size='sm'
+                        disabled
                         onClick={() => handleMenuItemClick('undo-copy')}
                       >
                         Redo
@@ -307,6 +373,20 @@ export default function BolanaMaker() {
                       >
                         Add Bolhat
                       </MenuListItem>
+                      {bolhats.length > 0 && (
+                        <>
+                          <Separator />
+                          {bolhats.map((bolhat, index) => (
+                            <MenuListItem 
+                              key={bolhat.id}
+                              size='sm'
+                              onClick={() => handleEditMenuItemClick(`select-bolhat-${bolhat.id}`)}
+                            >
+                              bol {index + 1}
+                            </MenuListItem>
+                          ))}
+                        </>
+                      )}
                     </MenuList>
                   </div>
                 )}
@@ -332,7 +412,13 @@ export default function BolanaMaker() {
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <ImageEditor ref={imageEditorRef} onSave={handleSave} onImageLoad={handleImageLoad} />
+              <ImageEditor 
+                ref={imageEditorRef} 
+                onSave={handleSave} 
+                onImageLoad={handleImageLoad}
+                viewportWidth={viewportWidth}
+                viewportHeight={viewportHeight}
+              />
             </WindowContent>
 
           </Window>

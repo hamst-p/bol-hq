@@ -1,74 +1,131 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from 'react95';
-import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
+import { usePrivyAuth } from '../hooks/usePrivyAuth';
+import { useSolanaWallet } from '../hooks/useSolanaWallet';
+import SolanaWalletInfo from './SolanaWalletInfo';
 
 export default function WalletConnectButton() {
-  const appKit = useAppKit();
-  const { address, isConnected } = useAppKitAccount();
+  const { 
+    ready, 
+    authenticated, 
+    user, 
+    loading, 
+    login, 
+    logout, 
+    walletAddress, 
+    email 
+  } = usePrivyAuth();
 
-  // デバッグ情報をコンソールに出力
+  const { isConnected: isSolanaConnected, balance, cluster } = useSolanaWallet();
+  const [showWalletInfo, setShowWalletInfo] = useState(false);
+
+  // デバッグログを追加
   useEffect(() => {
-    console.log('WalletConnectButton - Full AppKit object:', appKit);
-    console.log('WalletConnectButton - AppKit hooks:', {
-      appKit: !!appKit,
-      open: !!appKit?.open,
-      address,
-      isConnected
+    console.log('Privy状態:', {
+      ready,
+      authenticated,
+      user,
+      loading,
+      appId: process.env.NEXT_PUBLIC_PRIVY_APP_ID
     });
-
-    // グローバルなAppKitインスタンスも確認
-    console.log('Global window objects:', {
-      appKit: (window as any).appKit,
-      w3m: (window as any).w3m
+    
+    console.log('Solana状態:', {
+      isSolanaConnected,
+      balance,
+      cluster
     });
-  }, [appKit, address, isConnected]);
+  }, [ready, authenticated, user, loading, isSolanaConnected, balance, cluster]);
 
-  const displayAddress = isConnected && address 
-    ? `${address.slice(0, 6)}...${address.slice(-4)}` 
-    : 'Connect Wallet';
+  // 認証状態に応じて表示を変更
+  const getDisplayText = () => {
+    if (!authenticated || !user) return 'Connect Wallet';
+    
+    if (walletAddress) {
+      return `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
+    }
+    
+    if (email) {
+      return email.length > 20 ? `${email.slice(0, 17)}...` : email;
+    }
+    
+    return 'Connected';
+  };
 
   const handleClick = () => {
-    console.log('Button clicked, attempting to open AppKit...');
-    console.log('AppKit object:', appKit);
+    console.log('ボタンがクリックされました。現在の状態:', { ready, authenticated, loading });
     
-    try {
-      if (appKit?.open) {
-        console.log('Calling appKit.open()...');
-        appKit.open();
-        console.log('appKit.open() called successfully');
-      } else if ((window as any).appKit?.open) {
-        console.log('Using global appKit.open()...');
-        (window as any).appKit.open();
-        console.log('Global appKit.open() called successfully');
-      } else if ((window as any).w3m?.open) {
-        console.log('Using global w3m.open()...');
-        (window as any).w3m.open();
-        console.log('Global w3m.open() called successfully');
-      } else {
-        console.error('No AppKit open method available');
-        console.log('Available AppKit methods:', Object.keys(appKit || {}));
-      }
-    } catch (error) {
-      console.error('Failed to open AppKit modal:', error);
+    if (!ready) {
+      console.log('Privyの準備が完了していません');
+      return;
+    }
+    
+    if (loading) {
+      console.log('ローディング中です');
+      return;
+    }
+    
+    if (authenticated) {
+      console.log('ログアウトを実行します');
+      logout();
+    } else {
+      console.log('ログインを実行します');
+      login();
     }
   };
 
+  // 右クリックでウォレット情報を表示
+  const handleRightClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (authenticated && isSolanaConnected) {
+      setShowWalletInfo(true);
+    }
+  };
+
+  // ボタンの状態を決定
+  const isDisabled = !ready || loading;
+  const buttonText = loading ? 'Loading...' : getDisplayText();
+
   return (
-    <Button
-      onClick={handleClick}
-      disabled={true}
-      style={{
-        width: '150px',
-        padding: '2px 4px',
-        height: '40px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}
-    >
-      {displayAddress}
-    </Button>
+    <>
+      <Button
+        onClick={handleClick}
+        onContextMenu={handleRightClick}
+        disabled={isDisabled}
+        title={authenticated && isSolanaConnected ? '右クリックでウォレット情報を表示' : ''}
+        style={{
+          width: '150px',
+          padding: '2px 4px',
+          height: '40px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative'
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <span style={{ fontSize: '12px' }}>{buttonText}</span>
+          {authenticated && isSolanaConnected && (
+            <span style={{ fontSize: '10px', opacity: 0.8 }}>
+              {balance.toFixed(2)} SOL ({cluster})
+            </span>
+          )}
+        </div>
+      </Button>
+
+      {/* Solana ウォレット情報ウィンドウ */}
+      {showWalletInfo && (
+        <div style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 1000
+        }}>
+          <SolanaWalletInfo onClose={() => setShowWalletInfo(false)} />
+        </div>
+      )}
+    </>
   );
 } 
