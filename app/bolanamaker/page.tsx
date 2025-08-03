@@ -13,7 +13,8 @@ import {
   WindowHeader,
   MenuList,
   MenuListItem,
-  Separator
+  Separator,
+  Panel
 } from 'react95';
 import styled from 'styled-components';
 import ImageEditor, { ImageEditorRef } from '../components/ImageEditor';
@@ -68,8 +69,8 @@ const WindowWrapper = styled.div<{ $imageWidth?: number, $imageHeight?: number, 
     }};
     height: ${props => {
       if (props.$imageHeight) {
-        // 画像高さ + ウィンドウヘッダー(約32px) + ツールバー(約32px) + WindowContentパディング(上下10px) + ボーダー等(約8px)
-        const calculatedHeight = props.$imageHeight + 82;
+        // 画像高さ + ウィンドウヘッダー(約32px) + ツールバー(約32px) + ステータスバー(24px) + WindowContentパディング(上下10px) + ボーダー等(約8px)
+        const calculatedHeight = props.$imageHeight + 106;
         // ヘッダー(64px) + フッター(64px) + 余白(32px) = 160pxを引く
         const availableHeight = props.$viewportHeight - 160;
         const maxViewportHeight = Math.max(availableHeight, 300); // 最小300px確保
@@ -81,6 +82,18 @@ const WindowWrapper = styled.div<{ $imageWidth?: number, $imageHeight?: number, 
     max-height: ${props => props.$isMobile ? 'calc(100vh - 160px)' : 'calc(100vh - 120px)'};
     min-width: ${props => props.$isMobile ? '320px' : '400px'};
     min-height: ${props => props.$imageHeight ? 'auto' : props.$isMobile ? '300px' : '400px'};
+    
+    /* 右下の拡大縮小アイコン（リサイズハンドル）を非表示にする */
+    &::after {
+      display: none !important;
+    }
+    
+    /* より具体的にリサイズハンドルを非表示にする */
+    .resize-handle,
+    [class*="resize"],
+    [class*="ResizeHandle"] {
+      display: none !important;
+    }
   }
   .footer {
     display: block;
@@ -417,7 +430,16 @@ export default function BolanaMaker() {
                 viewportHeight={viewportHeight}
               />
             </WindowContent>
-
+            <Panel className='footer' variant='well' style={{ 
+              height: '24px', 
+              padding: '4px 8px', 
+              display: 'flex', 
+              alignItems: 'center',
+              fontSize: '11px',
+              background: '#c0c0c0'
+            }}>
+              Ready
+            </Panel>
           </Window>
         </WindowWrapper>
       </main>

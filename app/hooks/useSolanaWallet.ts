@@ -6,8 +6,27 @@ import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 export type SolanaCluster = 'mainnet-beta' | 'devnet' | 'testnet';
 
 export const useSolanaWallet = () => {
-  const { ready, authenticated, user } = usePrivy();
-  const { wallets } = useSolanaWallets();
+  // Privyプロバイダーが利用できない場合のエラーハンドリング
+  let privyData;
+  let walletsData;
+  
+  try {
+    privyData = usePrivy();
+    walletsData = useSolanaWallets();
+  } catch (error) {
+    console.warn('Privyプロバイダーが利用できません:', error);
+    privyData = {
+      ready: false,
+      authenticated: false,
+      user: null
+    };
+    walletsData = {
+      wallets: []
+    };
+  }
+
+  const { ready, authenticated, user } = privyData;
+  const { wallets } = walletsData;
   const [activeWallet, setActiveWallet] = useState<any>(null);
   const [connection, setConnection] = useState<Connection | null>(null);
   const [balance, setBalance] = useState<number>(0);

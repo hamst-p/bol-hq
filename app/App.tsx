@@ -12,9 +12,17 @@ interface AppProps {
 }
 
 export default function App({ children }: AppProps) {
+  const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
+  
   useEffect(() => {
-    console.log('App初期化 - Privy App ID:', process.env.NEXT_PUBLIC_PRIVY_APP_ID);
-  }, []);
+    console.log('App初期化 - Privy App ID:', privyAppId);
+  }, [privyAppId]);
+
+  // Privy App IDが設定されていない場合は、プロバイダーなしでchildrenを返す
+  if (!privyAppId) {
+    console.warn('NEXT_PUBLIC_PRIVY_APP_ID環境変数が設定されていません');
+    return <div>{children}</div>;
+  }
 
   // Solana RPC URLの設定（環境変数からカスタムRPCを使用可能）
   const getSolanaRpcUrl = (network: string) => {
@@ -33,7 +41,7 @@ export default function App({ children }: AppProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <PrivyProvider
-        appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || 'your-app-id'}
+        appId={privyAppId}
         config={{
           // ウォレットの設定
           embeddedWallets: {

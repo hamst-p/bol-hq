@@ -2,8 +2,29 @@ import { useEffect, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 
 export const usePrivyAuth = () => {
-  const { ready, authenticated, user, login, logout } = usePrivy();
   const [loading, setLoading] = useState(true);
+  
+  // Privyプロバイダーが利用できない場合のエラーハンドリング
+  let privyData;
+  try {
+    privyData = usePrivy();
+  } catch (error) {
+    console.warn('Privyプロバイダーが利用できません:', error);
+    // Privyが利用できない場合のデフォルト値
+    privyData = {
+      ready: false,
+      authenticated: false,
+      user: null,
+      login: async () => {
+        console.warn('Privyが利用できないためログインできません');
+      },
+      logout: async () => {
+        console.warn('Privyが利用できないためログアウトできません');
+      }
+    };
+  }
+
+  const { ready, authenticated, user, login, logout } = privyData;
 
   useEffect(() => {
     if (ready) {

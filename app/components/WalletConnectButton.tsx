@@ -7,6 +7,9 @@ import { useSolanaWallet } from '../hooks/useSolanaWallet';
 import SolanaWalletInfo from './SolanaWalletInfo';
 
 export default function WalletConnectButton() {
+  // Privy App IDが設定されていない場合の処理
+  const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
+  
   const { 
     ready, 
     authenticated, 
@@ -74,6 +77,15 @@ export default function WalletConnectButton() {
       login();
     }
   };
+
+  // Privy App IDが設定されていない場合は無効化されたボタンを表示
+  if (!privyAppId) {
+    return (
+      <Button disabled>
+        Wallet Not Available
+      </Button>
+    );
+  }
 
   // 右クリックでウォレット情報を表示
   const handleRightClick = (e: React.MouseEvent) => {
