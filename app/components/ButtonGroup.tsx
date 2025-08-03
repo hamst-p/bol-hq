@@ -76,7 +76,7 @@ const ButtonGroup: React.FC<ButtonGroupProps> = ({ width = 480 }) => {
           >
             What is BOL?
           </Button>
-          <Link href="https://jup.ag/swap/SOL-JDjprgWYuidVGfExWzMp7Z81K3T6Qsg5aJCnG6srRLGW" target="_blank" rel="noopener noreferrer">
+          <Link href="https://jup.ag/swap?sell=So11111111111111111111111111111111111111112&buy=JDjprgWYuidVGfExWzMp7Z81K3T6Qsg5aJCnG6srRLGW" target="_blank" rel="noopener noreferrer">
             <Button className="text-xs sm:text-sm px-2 sm:px-3">
               Swap
             </Button>
