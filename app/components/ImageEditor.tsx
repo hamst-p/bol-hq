@@ -29,6 +29,9 @@ interface BolhatState {
 
 const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onImageLoad, viewportWidth, viewportHeight }, ref) => {
   const [baseImage, setBaseImage] = useState<string | null>(null);
+  const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
+  const [originalWidth, setOriginalWidth] = useState<number>(0);
+  const [originalHeight, setOriginalHeight] = useState<number>(0);
   const [imageWidth, setImageWidth] = useState<number>(0);
   const [imageHeight, setImageHeight] = useState<number>(0);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -41,6 +44,8 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
   const [previousAngle, setPreviousAngle] = useState(0);
   const [cursorType, setCursorType] = useState<'default' | 'move' | 'rotate'>('default');
   const [lastPinchDistance, setLastPinchDistance] = useState<number | null>(null);
+  const [lastTouchAngle, setLastTouchAngle] = useState<number | null>(null);
+  const [isTouchRotating, setIsTouchRotating] = useState(false);
   const [bolhatImage, setBolhatImage] = useState<HTMLImageElement | null>(null);
   const [watermarkImage, setWatermarkImage] = useState<HTMLImageElement | null>(null);
 
@@ -66,13 +71,86 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
       document.getElementById('image-upload')?.click();
     },
     save: () => {
-      if (baseImage && canvasRef.current) {
-        // 最終的な合成画像を作成
-        redrawCanvas();
-        const savedImage = canvasRef.current.toDataURL();
+      if (originalImage && bolhatImage && watermarkImage) {
+        // オリジナル品質で合成画像を作成
+        const highQualityCanvas = document.createElement('canvas');
+        highQualityCanvas.width = originalWidth;
+        highQualityCanvas.height = originalHeight;
+        const ctx = highQualityCanvas.getContext('2d');
+        
+        if (ctx) {
+          // 高品質設定
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          
+          // オリジナル画像を描画
+          ctx.drawImage(originalImage, 0, 0, originalWidth, originalHeight);
+          
+          // 表示サイズとオリジナルサイズの比率を計算
+          const scaleX = originalWidth / imageWidth;
+          const scaleY = originalHeight / imageHeight;
+          
+          // 全てのbolhatを高解像度で描画
+          bolhats.forEach(bolhat => {
+            if (bolhat.visible) {
+              const scaledX = bolhat.x * scaleX;
+              const scaledY = bolhat.y * scaleY;
+              const scaledBolhatWidth = bolhatImage.width * bolhat.scale * scaleX;
+              const scaledBolhatHeight = bolhatImage.height * bolhat.scale * scaleY;
+              
+              ctx.save();
+              
+              // 選択中のbolhatの場合、枠線は保存時には描画しない
+              
+              ctx.translate(scaledX, scaledY);
+              ctx.rotate((bolhat.rotation * Math.PI) / 180);
+              ctx.drawImage(
+                bolhatImage,
+                -scaledBolhatWidth / 2,
+                -scaledBolhatHeight / 2,
+                scaledBolhatWidth,
+                scaledBolhatHeight
+              );
+              ctx.restore();
+            }
+          });
+
+          // ウォーターマークを高解像度で描画
+          ctx.save();
+          ctx.globalAlpha = 0.4;
+          
+          const watermarkScale = Math.min(originalWidth, originalHeight) / 7 / Math.max(watermarkImage.width, watermarkImage.height);
+          const watermarkWidth = watermarkImage.width * watermarkScale;
+          const watermarkHeight = watermarkImage.height * watermarkScale;
+          
+          const watermarkX = originalWidth - watermarkWidth - 10 * scaleX;
+          const watermarkY = originalHeight - watermarkHeight - 10 * scaleY;
+          
+          ctx.drawImage(
+            watermarkImage,
+            watermarkX,
+            watermarkY,
+            watermarkWidth,
+            watermarkHeight
+          );
+          
+          ctx.restore();
+          
+          // 高品質PNG形式で保存
+          const savedImage = highQualityCanvas.toDataURL('image/png', 1.0);
+          if (savedImage) {
+            onSave(savedImage);
+          }
+        }
+      } else if (baseImage && canvasRef.current) {
+        // フォールバック：従来の方法（選択枠なしで描画）
+        redrawCanvas(false);
+        const savedImage = canvasRef.current.toDataURL('image/png', 1.0);
         if (savedImage) {
           onSave(savedImage);
         }
+        // 保存後に選択枠を再表示
+        redrawCanvas(true);
       }
     },
     addBolhat: () => {
@@ -90,7 +168,7 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
     },
     getBolhats: () => bolhats,
     selectBolhat: (id: string) => {
-      setSelectedBolhatId(id);
+      setSelectedBolhatId(id || null);
     },
     deleteBolhat: (id: string) => {
       setBolhats(prev => prev.filter(b => b.id !== id));
@@ -101,12 +179,16 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
   }));
 
   // キャンバスを再描画
-  const redrawCanvas = () => {
+  const redrawCanvas = (showSelectionBorder: boolean = true) => {
     if (!canvasRef.current || !baseImage) return;
     
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // 高品質設定
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     // ベース画像を描画
     const img = new Image();
@@ -122,8 +204,8 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
           
           ctx.save();
           
-          // 選択中のbolhatの場合、枠線を描画
-          if (bolhat.id === selectedBolhatId) {
+          // 選択中のbolhatの場合、枠線を描画（showSelectionBorderがtrueの場合のみ）
+          if (bolhat.id === selectedBolhatId && showSelectionBorder) {
             ctx.strokeStyle = '#0066cc';
             ctx.lineWidth = 2;
             ctx.setLineDash([5, 5]);
@@ -152,10 +234,10 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
       // ウォーターマーク（bolana.png）を右下に描画
       if (watermarkImage) {
         ctx.save();
-        ctx.globalAlpha = 0.2; // 80%透過（20%不透明）
+        ctx.globalAlpha = 0.4; // 60%透過（40%不透明）
         
-        // ウォーターマークのサイズを調整（画像サイズの1/8程度）
-        const watermarkScale = Math.min(canvas.width, canvas.height) / 8 / Math.max(watermarkImage.width, watermarkImage.height);
+        // ウォーターマークのサイズを調整（画像サイズの1/7程度）
+        const watermarkScale = Math.min(canvas.width, canvas.height) / 7 / Math.max(watermarkImage.width, watermarkImage.height);
         const watermarkWidth = watermarkImage.width * watermarkScale;
         const watermarkHeight = watermarkImage.height * watermarkScale;
         
@@ -194,6 +276,13 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
   const getAngleFromMouse = (mouseX: number, mouseY: number, bolhat: BolhatState): number => {
     const dx = mouseX - bolhat.x;
     const dy = mouseY - bolhat.y;
+    return Math.atan2(dy, dx) * (180 / Math.PI);
+  };
+
+  // 二本指間の角度を計算
+  const getTouchAngle = (touch1: React.Touch, touch2: React.Touch): number => {
+    const dx = touch2.clientX - touch1.clientX;
+    const dy = touch2.clientY - touch1.clientY;
     return Math.atan2(dy, dx) * (180 / Math.PI);
   };
 
@@ -404,6 +493,27 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
       setSelectedBolhatId(touchedBolhat.id);
       setIsDragging(true);
       setLastMousePos({ x, y });
+      
+      // 二本指操作の場合の初期設定
+      if (e.touches.length === 2) {
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        
+        // 初期角度を設定（回転用）
+        const initialAngle = getTouchAngle(touch1, touch2);
+        setLastTouchAngle(initialAngle);
+        setIsTouchRotating(true);
+        
+        // 初期距離を設定（拡大縮小用）
+        const initialDistance = Math.sqrt(
+          Math.pow(touch2.clientX - touch1.clientX, 2) + 
+          Math.pow(touch2.clientY - touch1.clientY, 2)
+        );
+        setLastPinchDistance(initialDistance);
+      }
+    } else if (e.touches.length === 1) {
+      // 何もない場所をタッチした場合は選択を解除（一本指のみ）
+      setSelectedBolhatId(null);
     }
   };
 
@@ -448,16 +558,36 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
         Math.pow(touch2.clientY - touch1.clientY, 2)
       );
       
-      if (lastPinchDistance !== null) {
+      const selectedBolhat = getSelectedBolhat();
+      
+      // ピンチ拡大縮小
+      if (lastPinchDistance !== null && selectedBolhat) {
         const distanceRatio = currentDistance / lastPinchDistance;
         // より細かく、安定した拡大縮小
         const scaleFactor = Math.min(Math.max(distanceRatio, 0.95), 1.05);
         
-        const selectedBolhat = getSelectedBolhat();
-        if (selectedBolhat) {
+        updateSelectedBolhat({
+          scale: Math.max(0.01, Math.min(3, selectedBolhat.scale * scaleFactor))
+        });
+      }
+      
+      // 二本指回転
+      if (lastTouchAngle !== null && isTouchRotating && selectedBolhat) {
+        const currentAngle = getTouchAngle(touch1, touch2);
+        let angleDiff = currentAngle - lastTouchAngle;
+        
+        // 角度差を-180度から180度の範囲に正規化
+        while (angleDiff > 180) angleDiff -= 360;
+        while (angleDiff < -180) angleDiff += 360;
+        
+        // 回転感度を調整（より精密な操作のため）
+        if (Math.abs(angleDiff) > 0.5) { // 0.5度以上の変化のみ適用
+          // 回転感度を50%に設定（適度な感度）
+          const adjustedAngleDiff = angleDiff * 0.5;
           updateSelectedBolhat({
-            scale: Math.max(0.01, Math.min(3, selectedBolhat.scale * scaleFactor))
+            rotation: (selectedBolhat.rotation + adjustedAngleDiff + 360) % 360
           });
+          setLastTouchAngle(currentAngle);
         }
       }
       
@@ -468,6 +598,8 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
   const handleTouchEnd = () => {
     setIsDragging(false);
     setLastPinchDistance(null); // ピンチ距離をリセット
+    setLastTouchAngle(null); // 回転角度をリセット
+    setIsTouchRotating(false); // 回転状態をリセット
   };
 
   // bolhatsの状態が変わったら再描画
@@ -487,35 +619,47 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
           if (canvasRef.current) {
             const canvas = canvasRef.current;
             
-            // 最大サイズを設定（ビューポートに収まるように動的計算）
-            // ヘッダー、フッター、ツールバー、パディング等を考慮して実用的な最大サイズを計算
-            const maxWidth = Math.min(viewportWidth * 0.85, 1000); // ビューポート幅の85%、最大1000px
-            // ヘッダー(64px) + フッター(64px) + ウィンドウヘッダー・ツールバー(64px) + 余白(48px) = 240pxを引く
+            // オリジナル画像データを保存
+            setOriginalImage(img);
+            setOriginalWidth(img.width);
+            setOriginalHeight(img.height);
+            
+            // 表示用サイズを計算（ビューポートに収まるように）
+            const maxWidth = Math.min(viewportWidth * 0.85, 1200); // 表示限界を緩和
             const availableHeight = viewportHeight - 240;
-            const maxHeight = Math.min(Math.max(availableHeight, 200), 600); // 最小200px、最大600px
+            const maxHeight = Math.min(Math.max(availableHeight, 200), 800); // 表示限界を緩和
             
-            let { width, height } = img;
+            let displayWidth = img.width;
+            let displayHeight = img.height;
             
-            // アスペクト比を維持しながらサイズ調整
-            if (width > maxWidth) {
-              height = (height * maxWidth) / width;
-              width = maxWidth;
+            // 表示用のサイズ調整（アスペクト比維持）
+            if (displayWidth > maxWidth) {
+              displayHeight = (displayHeight * maxWidth) / displayWidth;
+              displayWidth = maxWidth;
             }
-            if (height > maxHeight) {
-              width = (width * maxHeight) / height;
-              height = maxHeight;
+            if (displayHeight > maxHeight) {
+              displayWidth = (displayWidth * maxHeight) / displayHeight;
+              displayHeight = maxHeight;
             }
             
-            canvas.width = width;
-            canvas.height = height;
+            canvas.width = displayWidth;
+            canvas.height = displayHeight;
             
             const ctx = canvas.getContext('2d');
             if (ctx) {
-              ctx.drawImage(img, 0, 0, width, height);
-              setBaseImage(canvas.toDataURL());
-              setImageWidth(width);
-              setImageHeight(height);
-              onImageLoad(width, height);
+              // 高品質設定
+              ctx.imageSmoothingEnabled = true;
+              ctx.imageSmoothingQuality = 'high';
+              
+              // 表示用キャンバスに描画
+              ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
+              
+              // 高品質でbaseImageを保存（PNG形式）
+              setBaseImage(canvas.toDataURL('image/png', 1.0));
+              setImageWidth(displayWidth);
+              setImageHeight(displayHeight);
+              onImageLoad(displayWidth, displayHeight);
+              
               // 新しい画像をロードしたらbolhatsをクリア
               setBolhats([]);
               setSelectedBolhatId(null);
@@ -558,12 +702,24 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
   };
 
   return (
-    <div className="w-full h-full">
+    <div 
+      className="w-full h-full"
+      style={{
+        overflow: 'hidden',
+        touchAction: baseImage ? 'none' : 'auto',
+        userSelect: baseImage ? 'none' : 'auto'
+      }}
+    >
       <input
         type="file"
         accept="image/*"
         onChange={handleImageUpload}
-        style={{ display: 'none' }}
+        style={{ 
+          display: 'none',
+          position: 'absolute',
+          opacity: 0,
+          pointerEvents: 'auto'
+        }}
         id="image-upload"
       />
 
@@ -575,13 +731,15 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         style={{ 
-          height: baseImage ? `${imageHeight}px` : '500px', 
-          minHeight: baseImage ? `${imageHeight}px` : '500px',
+          height: baseImage ? `${imageHeight}px` : (viewportHeight < 600 ? '200px' : '500px'), 
+          minHeight: baseImage ? `${imageHeight}px` : (viewportHeight < 600 ? '200px' : '500px'),
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
-          padding: baseImage ? '0' : '1rem'
+          padding: baseImage ? '0' : '1rem',
+          touchAction: baseImage ? 'none' : 'auto',
+          userSelect: baseImage ? 'none' : 'auto'
         }}
       >
         <canvas
@@ -608,6 +766,7 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
             border: 'none',
             outline: 'none',
             touchAction: 'none', // ブラウザのデフォルトタッチ動作を無効化
+            imageRendering: 'auto', // 高品質レンダリング
             cursor: isDragging 
               ? (dragType === 'rotate' ? 'crosshair' : 'grabbing')
               : cursorType === 'move' 
@@ -628,23 +787,44 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
               textAlign: 'center',
               width: '100%',
               height: '100%',
-              minHeight: '500px'
+              minHeight: viewportHeight < 600 ? '200px' : '500px',
+              pointerEvents: 'auto',
+              cursor: 'pointer',
+              zIndex: 10
             }}
-            onClick={() => document.getElementById('image-upload')?.click()}
+            onClick={(e) => {
+              console.log('Image select area clicked');
+              e.stopPropagation();
+              const fileInput = document.getElementById('image-upload') as HTMLInputElement;
+              if (fileInput) {
+                fileInput.click();
+                console.log('File input click triggered');
+              }
+            }}
+            onTouchEnd={(e) => {
+              console.log('Image select area touched');
+              e.stopPropagation();
+              e.preventDefault();
+              const fileInput = document.getElementById('image-upload') as HTMLInputElement;
+              if (fileInput) {
+                fileInput.click();
+                console.log('File input click triggered via touch');
+              }
+            }}
           >
             <div className="mb-4">
               <Pbrush1 
                 style={{ 
-                  width: '64px', 
-                  height: '64px',
+                  width: viewportHeight < 600 ? '32px' : '64px', 
+                  height: viewportHeight < 600 ? '32px' : '64px',
                   imageRendering: 'pixelated'
                 }} 
               />
             </div>
-            <div className="text-lg font-medium mb-2">
+            <div className={`${viewportHeight < 600 ? 'text-sm' : 'text-lg'} font-medium mb-2`}>
               {isDragOver ? 'Drop your image here' : 'Choose an image or drag & drop'}
             </div>
-            <div className="text-sm">
+            <div className={`${viewportHeight < 600 ? 'text-xs' : 'text-sm'}`}>
               Supports: JPG, PNG, GIF, WebP
             </div>
           </div>

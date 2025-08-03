@@ -10,6 +10,9 @@ export default function WalletConnectButton() {
   // Privy App IDが設定されていない場合の処理
   const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
   
+  // HTTPS接続かどうかを判定
+  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  
   const { 
     ready, 
     authenticated, 
@@ -83,6 +86,15 @@ export default function WalletConnectButton() {
     return (
       <Button disabled>
         Wallet Not Available
+      </Button>
+    );
+  }
+
+  // HTTPS接続でない場合はウォレット機能が無効化されていることを表示
+  if (!isHttps) {
+    return (
+      <Button disabled title="ウォレット機能はHTTPS接続でのみ利用可能です">
+        HTTP Only (No Wallet)
       </Button>
     );
   }

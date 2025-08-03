@@ -14,9 +14,13 @@ interface AppProps {
 export default function App({ children }: AppProps) {
   const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
   
+  // HTTPS接続かどうかを判定
+  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  
   useEffect(() => {
     console.log('App初期化 - Privy App ID:', privyAppId);
-  }, [privyAppId]);
+    console.log('HTTPS接続:', isHttps);
+  }, [privyAppId, isHttps]);
 
   // Privy App IDが設定されていない場合は、プロバイダーなしでchildrenを返す
   if (!privyAppId) {
@@ -37,6 +41,16 @@ export default function App({ children }: AppProps) {
         return 'https://api.mainnet-beta.solana.com';
     }
   };
+
+  // HTTPSでない場合はPrivyプロバイダーを完全に無効化
+  if (!isHttps) {
+    console.log('HTTP接続のため、Privyプロバイダーを無効化します');
+    return (
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>

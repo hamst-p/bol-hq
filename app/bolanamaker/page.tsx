@@ -69,7 +69,7 @@ const WindowWrapper = styled.div<{ $imageWidth?: number, $imageHeight?: number, 
     }};
     height: ${props => {
       if (props.$imageHeight) {
-        // 画像高さ + ウィンドウヘッダー(約32px) + ツールバー(約32px) + ステータスバー(24px) + WindowContentパディング(上下10px) + ボーダー等(約8px)
+        // 画像高さ + ウィンドウヘッダー(約32px) + ツールバー(約32px) + WindowContentパディング(上下10px) + ボーダー等(約8px)
         const calculatedHeight = props.$imageHeight + 106;
         // ヘッダー(64px) + フッター(64px) + 余白(32px) = 160pxを引く
         const availableHeight = props.$viewportHeight - 160;
@@ -78,10 +78,10 @@ const WindowWrapper = styled.div<{ $imageWidth?: number, $imageHeight?: number, 
       }
       return 'auto';
     }};
-    max-width: 95vw;
-    max-height: ${props => props.$isMobile ? 'calc(100vh - 160px)' : 'calc(100vh - 120px)'};
+    max-width: 100vw;
+    max-height: 100vh;
     min-width: ${props => props.$isMobile ? '320px' : '400px'};
-    min-height: ${props => props.$imageHeight ? 'auto' : props.$isMobile ? '300px' : '400px'};
+    min-height: ${props => props.$imageHeight ? 'auto' : props.$isMobile ? '200px' : '400px'};
     
     /* 右下の拡大縮小アイコン（リサイズハンドル）を非表示にする */
     &::after {
@@ -94,13 +94,6 @@ const WindowWrapper = styled.div<{ $imageWidth?: number, $imageHeight?: number, 
     [class*="ResizeHandle"] {
       display: none !important;
     }
-  }
-  .footer {
-    display: block;
-    margin: 0.25rem;
-    height: 31px;
-    line-height: 31px;
-    padding-left: 0.25rem;
   }
 `;
 
@@ -116,6 +109,8 @@ export default function BolanaMaker() {
   const [viewportWidth, setViewportWidth] = useState<number>(1200);
   const [viewportHeight, setViewportHeight] = useState<number>(800);
   const [bolhats, setBolhats] = useState<any[]>([]);
+  const [showSavePopup, setShowSavePopup] = useState<boolean>(false);
+  const [savedImageUrl, setSavedImageUrl] = useState<string | null>(null);
   const imageEditorRef = useRef<ImageEditorRef>(null);
 
   useEffect(() => {
@@ -158,20 +153,59 @@ export default function BolanaMaker() {
     return () => clearInterval(interval);
   }, [baseImage]);
 
-  // モバイル時の適切なスクロール制御
+  // スクロール完全無効化
   useEffect(() => {
-    if (isMobile) {
-      // モバイルの場合は適切なスクロール制御を設定
-      document.body.style.overflowX = 'hidden'; // 横スクロールのみ無効化
-      document.body.style.overflowY = 'auto'; // 縦スクロールは有効
+    // ドラッグやピンチ操作のために全てのスクロールを無効化
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    
+    // タッチイベントでのスクロール防止（画像選択エリアは除外）
+    const preventScroll = (e: TouchEvent) => {
+      // ポップアップ表示中は全てのタッチイベントを許可
+      if (showSavePopup) {
+        return;
+      }
       
-      return () => {
-        // クリーンアップ時に元に戻す
-        document.body.style.overflowX = '';
-        document.body.style.overflowY = '';
-      };
-    }
-  }, [isMobile]);
+      const target = e.target as HTMLElement;
+      
+      // file inputやChoose画像エリア、メニューエリアでのイベントは許可
+      if (target && (
+        target.tagName === 'INPUT' ||
+        target.closest('[id="image-upload"]') ||
+        target.closest('.cursor-pointer') ||
+        target.closest('button') ||
+        target.closest('[role="menuitem"]') ||
+        target.closest('[class*="MenuList"]') ||
+        target.closest('[class*="Button"]') ||
+        (!baseImage && target.closest('[variant="field"]'))
+      )) {
+        return;
+      }
+      
+      e.preventDefault();
+    };
+    
+    // パッシブリスナーではなく、積極的にpreventDefaultを実行
+    document.addEventListener('touchstart', preventScroll, { passive: false });
+    document.addEventListener('touchmove', preventScroll, { passive: false });
+    document.addEventListener('touchend', preventScroll, { passive: false });
+    
+    return () => {
+      // クリーンアップ時に元に戻す
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      
+      document.removeEventListener('touchstart', preventScroll);
+      document.removeEventListener('touchmove', preventScroll);
+      document.removeEventListener('touchend', preventScroll);
+    };
+  }, [showSavePopup]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -194,41 +228,23 @@ export default function BolanaMaker() {
   }, [isFileMenuOpen, isEditMenuOpen]);
 
   const handleSave = async (image: string) => {
+    console.log('handleSave called, isMobile:', isMobile);
     setEditedImage(image);
     
-    if (isMobile && navigator.share) {
-      // モバイルでWeb Share APIが利用可能な場合
-      try {
-        // Data URLからBlobに変換
-        const response = await fetch(image);
-        const blob = await response.blob();
-        const file = new File([blob], 'edited-bolana.png', { type: 'image/png' });
-        
-        await navigator.share({
-          title: 'Edited Bolana Image',
-          files: [file]
-        });
-        return;
-      } catch (error) {
-        console.log('Web Share API failed, falling back to download:', error);
-      }
+    if (isMobile) {
+      // モバイルの場合はポップアップで画像を表示
+      console.log('Showing save popup for mobile');
+      setSavedImageUrl(image);
+      setShowSavePopup(true);
+      return;
     }
     
-    // デスクトップまたはWeb Share APIが利用できない場合の通常のダウンロード
+    // デスクトップの場合は従来通りのダウンロード
+    console.log('Desktop download');
     const link = document.createElement('a');
     link.href = image;
     link.download = 'edited-bolana.png';
-    
-    // モバイルでのダウンロードを改善
-    if (isMobile) {
-      link.target = '_blank';
-      // モバイルブラウザでダウンロードリンクを確実に動作させる
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      link.click();
-    }
+    link.click();
   };
 
   const handleImageLoad = (width: number, height: number) => {
@@ -238,8 +254,14 @@ export default function BolanaMaker() {
   };
 
   const handleSaveClick = () => {
+    console.log('Save button clicked, baseImage:', baseImage);
     // ImageEditorのsave関数を呼び出す
     imageEditorRef.current?.save();
+  };
+
+  const closeSavePopup = () => {
+    setShowSavePopup(false);
+    setSavedImageUrl(null);
   };
 
   const handleMenuItemClick = (action: string) => {
@@ -271,10 +293,29 @@ export default function BolanaMaker() {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col bg-[#53bba5]`}>
+    <div 
+      className={`min-h-screen flex flex-col bg-[#53bba5]`}
+      style={{
+        overflow: 'hidden',
+        touchAction: 'auto',
+        userSelect: 'auto',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh'
+      }}
+    >
       <Header />
 
-      <main className={`flex-1 flex items-center justify-center pt-4 pb-4`}>
+      <main 
+        className={`flex-1 flex items-center justify-center`}
+        style={{
+          overflow: 'hidden',
+          touchAction: 'auto',
+          padding: '4px'
+        }}
+      >
         <WindowWrapper 
           $imageWidth={imageWidth} 
           $imageHeight={imageHeight} 
@@ -289,16 +330,23 @@ export default function BolanaMaker() {
                 <span className='close-icon' />
               </Button>
             </WindowHeader>
-            <Toolbar>
-              <div style={{ position: 'relative' }}>
+            <Toolbar style={{ touchAction: 'auto', userSelect: 'auto', pointerEvents: 'auto' }}>
+              <div style={{ position: 'relative', touchAction: 'auto', pointerEvents: 'auto' }}>
                 <Button 
                   variant='menu' 
                   size='sm'
                   onClick={(e) => {
+                    console.log('File menu button clicked');
                     e.stopPropagation();
                     setIsFileMenuOpen(!isFileMenuOpen);
                   }}
                   active={isFileMenuOpen}
+                  style={{
+                    touchAction: 'auto',
+                    pointerEvents: 'auto',
+                    userSelect: 'auto',
+                    cursor: 'pointer'
+                  }}
                 >
                   File
                 </Button>
@@ -311,9 +359,15 @@ export default function BolanaMaker() {
                       zIndex: 1000,
                       background: 'white',
                       border: '1px solid #ccc',
-                      boxShadow: '2px 2px 5px rgba(0,0,0,0.3)'
+                      boxShadow: '2px 2px 5px rgba(0,0,0,0.3)',
+                      touchAction: 'auto',
+                      pointerEvents: 'auto',
+                      userSelect: 'auto'
                     }}
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      console.log('File menu dropdown clicked');
+                      e.stopPropagation();
+                    }}
                   >
                     <MenuList>
                       <MenuListItem 
@@ -349,16 +403,23 @@ export default function BolanaMaker() {
                   </div>
                 )}
               </div>
-              <div style={{ position: 'relative' }}>
+              <div style={{ position: 'relative', touchAction: 'auto', pointerEvents: 'auto' }}>
                 <Button 
                   variant='menu' 
                   size='sm'
                   onClick={(e) => {
+                    console.log('Edit menu button clicked');
                     e.stopPropagation();
                     setIsEditMenuOpen(!isEditMenuOpen);
                   }}
                   active={isEditMenuOpen}
                   disabled={!baseImage}
+                  style={{
+                    touchAction: 'auto',
+                    pointerEvents: 'auto',
+                    userSelect: 'auto',
+                    cursor: 'pointer'
+                  }}
                 >
                   Edit
                 </Button>
@@ -371,9 +432,15 @@ export default function BolanaMaker() {
                       zIndex: 1000,
                       background: 'white',
                       border: '1px solid #ccc',
-                      boxShadow: '2px 2px 5px rgba(0,0,0,0.3)'
+                      boxShadow: '2px 2px 5px rgba(0,0,0,0.3)',
+                      touchAction: 'auto',
+                      pointerEvents: 'auto',
+                      userSelect: 'auto'
                     }}
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      console.log('Edit menu dropdown clicked');
+                      e.stopPropagation();
+                    }}
                   >
                     <MenuList>
                       <MenuListItem 
@@ -401,14 +468,32 @@ export default function BolanaMaker() {
                   </div>
                 )}
               </div>
-              <Button variant='menu' size='sm' disabled>
+              <Button 
+                variant='menu' 
+                size='sm' 
+                disabled
+                style={{
+                  touchAction: 'auto',
+                  pointerEvents: 'auto',
+                  userSelect: 'auto'
+                }}
+              >
                 Mint
               </Button>
               <Button 
                 variant='menu' 
                 size='sm' 
-                onClick={handleSaveClick} 
+                onClick={(e) => {
+                  console.log('Save button clicked');
+                  handleSaveClick();
+                }} 
                 disabled={!baseImage}
+                style={{
+                  touchAction: 'auto',
+                  pointerEvents: 'auto',
+                  userSelect: 'auto',
+                  cursor: 'pointer'
+                }}
               >
                 Save
               </Button>
@@ -430,21 +515,100 @@ export default function BolanaMaker() {
                 viewportHeight={viewportHeight}
               />
             </WindowContent>
-            <Panel className='footer' variant='well' style={{ 
-              height: '24px', 
-              padding: '4px 8px', 
-              display: 'flex', 
-              alignItems: 'center',
-              fontSize: '11px',
-              background: '#c0c0c0'
-            }}>
-              Ready
-            </Panel>
+
           </Window>
         </WindowWrapper>
       </main>
 
       <Footer />
+
+      {/* 画像保存用ポップアップ（モバイル専用） */}
+      {showSavePopup && savedImageUrl && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            zIndex: 10000,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            touchAction: 'auto'
+          }}
+          onClick={closeSavePopup}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              padding: '20px',
+              maxWidth: '90vw',
+              maxHeight: '80vh',
+              overflow: 'auto',
+              textAlign: 'center',
+              touchAction: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: 'bold' }}>
+              Save Image
+            </h3>
+            
+            <img
+              src={savedImageUrl}
+              alt="Edited Bolana"
+              style={{
+                maxWidth: '100%',
+                maxHeight: '50vh',
+                objectFit: 'contain',
+                marginBottom: '16px',
+                border: '1px solid #ccc',
+                borderRadius: '4px'
+              }}
+              onContextMenu={(e) => e.preventDefault()}
+            />
+            
+            <div style={{
+              backgroundColor: '#f0f0f0',
+              padding: '12px',
+              borderRadius: '4px',
+              marginBottom: '16px',
+              fontSize: '14px'
+            }}>
+              <p style={{ margin: '0 0 8px 0', fontWeight: 'bold' }}>
+                📱 How to save:
+              </p>
+              <p style={{ margin: '0 0 4px 0' }}>
+                <strong>Long press</strong> the image above
+              </p>
+              <p style={{ margin: '0', fontSize: '12px', color: '#666' }}>
+                Select "Save Image" to save to camera roll
+              </p>
+            </div>
+            
+            <button
+              onClick={closeSavePopup}
+              style={{
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '10px 20px',
+                fontSize: '16px',
+                cursor: 'pointer',
+                touchAction: 'auto'
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

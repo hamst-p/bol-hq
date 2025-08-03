@@ -6,23 +6,39 @@ import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 export type SolanaCluster = 'mainnet-beta' | 'devnet' | 'testnet';
 
 export const useSolanaWallet = () => {
+  // HTTPS接続かどうかを判定
+  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  
   // Privyプロバイダーが利用できない場合のエラーハンドリング
   let privyData;
   let walletsData;
   
-  try {
-    privyData = usePrivy();
-    walletsData = useSolanaWallets();
-  } catch (error) {
-    console.warn('Privyプロバイダーが利用できません:', error);
+  if (!isHttps) {
+    // HTTPSでない場合はPrivyを使わない
+    console.log('HTTP接続のため、Solana ウォレット機能を無効化しています');
     privyData = {
-      ready: false,
+      ready: true,
       authenticated: false,
       user: null
     };
     walletsData = {
       wallets: []
     };
+  } else {
+    try {
+      privyData = usePrivy();
+      walletsData = useSolanaWallets();
+    } catch (error) {
+      console.warn('Privyプロバイダーが利用できません:', error);
+      privyData = {
+        ready: false,
+        authenticated: false,
+        user: null
+      };
+      walletsData = {
+        wallets: []
+      };
+    }
   }
 
   const { ready, authenticated, user } = privyData;
