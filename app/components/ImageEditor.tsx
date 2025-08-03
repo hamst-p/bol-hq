@@ -488,9 +488,11 @@ const ImageEditor = forwardRef<ImageEditorRef, ImageEditorProps>(({ onSave, onIm
             const canvas = canvasRef.current;
             
             // 最大サイズを設定（ビューポートに収まるように動的計算）
-            // ヘッダー、ツールバー、パディング等を考慮して実用的な最大サイズを計算
+            // ヘッダー、フッター、ツールバー、パディング等を考慮して実用的な最大サイズを計算
             const maxWidth = Math.min(viewportWidth * 0.85, 1000); // ビューポート幅の85%、最大1000px
-            const maxHeight = Math.min(viewportHeight * 0.6, 600); // ビューポート高さの60%、最大600px
+            // ヘッダー(64px) + フッター(64px) + ウィンドウヘッダー・ツールバー(64px) + 余白(48px) = 240pxを引く
+            const availableHeight = viewportHeight - 240;
+            const maxHeight = Math.min(Math.max(availableHeight, 200), 600); // 最小200px、最大600px
             
             let { width, height } = img;
             

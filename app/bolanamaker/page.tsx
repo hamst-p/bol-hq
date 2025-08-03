@@ -68,18 +68,19 @@ const WindowWrapper = styled.div<{ $imageWidth?: number, $imageHeight?: number, 
     }};
     height: ${props => {
       if (props.$imageHeight) {
-        // 画像高さ + ヘッダー(約32px) + ツールバー(約32px) + WindowContentパディング(上下10px) + ボーダー等(約8px)
+        // 画像高さ + ウィンドウヘッダー(約32px) + ツールバー(約32px) + WindowContentパディング(上下10px) + ボーダー等(約8px)
         const calculatedHeight = props.$imageHeight + 82;
-        // ビューポートの95%を上限とする
-        const maxViewportHeight = props.$viewportHeight * 0.95;
+        // ヘッダー(64px) + フッター(64px) + 余白(32px) = 160pxを引く
+        const availableHeight = props.$viewportHeight - 160;
+        const maxViewportHeight = Math.max(availableHeight, 300); // 最小300px確保
         return `${Math.min(calculatedHeight, maxViewportHeight)}px`;
       }
       return 'auto';
     }};
     max-width: 95vw;
-    max-height: 95vh;
+    max-height: ${props => props.$isMobile ? 'calc(100vh - 160px)' : 'calc(100vh - 120px)'};
     min-width: ${props => props.$isMobile ? '320px' : '400px'};
-    min-height: ${props => props.$imageHeight ? 'auto' : '500px'};
+    min-height: ${props => props.$imageHeight ? 'auto' : props.$isMobile ? '300px' : '400px'};
   }
   .footer {
     display: block;
@@ -144,21 +145,17 @@ export default function BolanaMaker() {
     return () => clearInterval(interval);
   }, [baseImage]);
 
-  // モバイル時にbodyのスクロールを無効化
+  // モバイル時の適切なスクロール制御
   useEffect(() => {
     if (isMobile) {
-      // モバイルの場合はページ全体のスクロールを無効化
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.height = '100%';
+      // モバイルの場合は適切なスクロール制御を設定
+      document.body.style.overflowX = 'hidden'; // 横スクロールのみ無効化
+      document.body.style.overflowY = 'auto'; // 縦スクロールは有効
       
       return () => {
         // クリーンアップ時に元に戻す
-        document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.body.style.width = '';
-        document.body.style.height = '';
+        document.body.style.overflowX = '';
+        document.body.style.overflowY = '';
       };
     }
   }, [isMobile]);
@@ -261,10 +258,10 @@ export default function BolanaMaker() {
   };
 
   return (
-    <div className={`h-screen flex flex-col bg-[#53bba5] ${isMobile ? 'overflow-hidden' : 'overflow-auto'}`}>
+    <div className={`min-h-screen flex flex-col bg-[#53bba5]`}>
       <Header />
 
-      <main className={`flex-1 flex items-center justify-center pt-16 ${isMobile ? 'overflow-hidden' : ''}`}>
+      <main className={`flex-1 flex items-center justify-center pt-4 pb-4`}>
         <WindowWrapper 
           $imageWidth={imageWidth} 
           $imageHeight={imageHeight} 
