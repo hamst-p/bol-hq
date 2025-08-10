@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Frame, Button, List, ListItem, Divider } from 'react95';
+import { Frame, Button, List, Divider } from 'react95';
 import Image from 'next/image';
-import Link from 'next/link';
 import WalletConnectButton from './WalletConnectButton';
+import MenuItem from './MenuItem';
+import { menuData } from './menuData';
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -48,80 +49,20 @@ export default function Header() {
               }}
               onClick={() => setOpen(false)}
             >
-              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span role="img" aria-label="🏠" style={{ marginLeft: '8px' }}>
-                  🏠
-                </span>
-                <Link href="/" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
-                  Home
-                </Link>
-              </ListItem>
-              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
-                  💰
-                </span>
-                <Link href="https://jup.ag/swap/SOL-JDjprgWYuidVGfExWzMp7Z81K3T6Qsg5aJCnG6srRLGW" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
-                  Swap
-                </Link>
-              </ListItem>
-              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
-                  📈
-                </span>
-                <Link href="https://dexscreener.com/solana/8eqej7m9banvn96ycizj2o8x3cr8ywmrfcxxjpsmwibc" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
-                  Chart
-                </Link>
-              </ListItem>
-              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
-                  🌏
-                </span>
-                <Link href="/account" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
-                  Socials
-                </Link>
-              </ListItem>
-              <Divider />
-              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
-                  🎨
-                </span>
-                <Link href="https://memedepot.com/d/bol" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
-                  Meme Bank
-                </Link>
-              </ListItem>
-              <ListItem disabled style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
-                  👆
-                </span>
-                <Link href="/tapitwebol" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
-                  TAP IT WE BOL
-                </Link>
-              </ListItem>
-              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
-                  👽
-                </span>
-                <Link href="/bolanamaker" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
-                  Bolana Maker
-                </Link>
-              </ListItem>
-              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span role="img" aria-label="📁" style={{ marginLeft: '8px' }}>
-                  🍜
-                </span>
-                <Link href="/3d" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
-                  3D Bol Experiment
-                </Link>
-              </ListItem>
-              <Divider />
-              <ListItem style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span role="img" aria-label="🔙" style={{ marginLeft: '8px' }}>
-                  🔙
-                </span>
-                <Link href="/" style={{ textDecoration: 'none', color: 'inherit', marginRight: '8px' }}>
-                  Logout
-                </Link>
-              </ListItem>
+              {menuData.map((item, index) => 
+                item === 'divider' ? (
+                  <Divider key={`divider-${index}`} />
+                ) : (
+                  <MenuItem
+                    key={`menu-${index}`}
+                    icon={item.icon}
+                    label={item.label}
+                    href={item.href}
+                    disabled={item.disabled}
+                    external={item.external}
+                  />
+                )
+              )}
             </List>
           )}
         </div>

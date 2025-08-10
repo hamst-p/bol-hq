@@ -97,6 +97,12 @@ const ButtonGroup: React.FC<ButtonGroupProps> = ({ width = 480 }) => {
               Bolana Maker
             </Button>
           </Link>
+          <Link href="/mineabol">
+            <Button className="text-xs sm:text-sm px-2 sm:px-3">
+              <span className="hidden sm:inline">MINE IT WE BOL</span>
+              <span className="sm:hidden">MINE WE BOL</span>
+            </Button>
+          </Link>
           <Link href="/3d">
             <Button className="text-xs sm:text-sm px-2 sm:px-3">
               <span className="hidden sm:inline">3D Bol Experiment</span>
