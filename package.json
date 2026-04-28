@@ -19,7 +19,7 @@
     "@tanstack/react-query": "^5.80.7",
     "@use-gesture/react": "^10.3.1",
     "ethers": "^6.14.4",
-    "next": "14.2.13",
+    "next": "14.2.35",
     "react": "^18",
     "react-dom": "^18",
     "react95": "^4.0.0",
